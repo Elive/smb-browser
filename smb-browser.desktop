@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1
+Encoding=UTF-8
+Name=Smb-Browser
+GenericName=Smb-Browser
+Exec=smb-browser
+Icon=smb-browser.png
+Terminal=false
+MultipleArgs=false
+Type=Application
+Categories=System;Application
+GenericName[en]=Smb-Browser
