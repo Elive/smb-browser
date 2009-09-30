@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.04.5"
+VERSION="1.04.6"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -29,7 +29,7 @@ VERSION="1.04.5"
 ##storing current unames and pw not working at the moment. not added when entered.-- FIXED
 ##added bookmark feature
 import pango
-import  gtk,commands,sys,os,threading,time,gobject,configobj,gettext,subprocess
+import  gtk,commands,sys,os,threading,time,gobject,configobj,gettext,subprocess,stat
 APP = 'smb-browser'
 DIR = '/usr/share/locale/'
 gettext.bindtextdomain(APP, DIR)
@@ -989,6 +989,13 @@ def save(savebtn):
 		mnt_cmd=SMBMOUNT_CMD
 	elif mnt_cmd_cifs.get_active()==True:
 		mnt_cmd=MOUNT_CIFS_CMD
+		#check if MOUNT_CIFS_CMD is suid
+		if os.stat(MOUNT_CIFS_CMD).st_mode & stat.S_ISUID ==0:
+			if os.getuid()!=0:
+				print "not SUID and not root"
+				ERROR(_("It appears that you are not 'root' and that your mount.cifs command is not SUID. Please fix this with the following as root in a terminal: chmod u+s ")+str(MOUNT_CIFS_CMD))
+				mnt_cmd_smb.set_active(True)
+				return
 	if check_for_mnt_cmd(mnt_cmd) ==False:
 			if mnt_cmd ==SMBMOUNT_CMD:
 				cmdtotry=MOUNT_CIFS_CMD
@@ -1511,8 +1518,17 @@ def readconf():
 		print "Activateing smbmount"
 		mnt_cmd_smb.set_active(True)
 	elif "mount.cifs" in config[conf]["mount_command"].strip():
-		print "Activateing cifs"
-		mnt_cmd_cifs.set_active(True)
+		if os.stat(MOUNT_CIFS_CMD).st_mode & stat.S_ISUID ==0:
+			if os.getuid()!=0:
+				print "not SUID and not root"
+				if check_for_mnt_cmd("smbmount")==True:
+					mnt_cmd_smb.set_active(True)
+					ERROR(_("It appears that you are not 'root' and that your mount.cifs command is not SUID. We found 'smbmount' and have changed your configurations to use that. To use mount.cifs, please run the following as root in a terminal: chmod u+s ")+str(MOUNT_CIFS_CMD))
+				else:
+					ERROR(_("It appears that you are not 'root' and that your mount.cifs command is not SUID. Until this is fixed, you will not be able to mount shares as user. Please run the following as root in a terminal: chmod u+s ")+str(MOUNT_CIFS_CMD))
+		else:
+			print "Activateing cifs"
+			mnt_cmd_cifs.set_active(True)
 	tup= wg_entry.get_text()
 	x=wgcheckbox.get_active()
 	wgtreestore.clear()
