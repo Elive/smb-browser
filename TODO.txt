@@ -1,1 +1,2 @@
 - if the dir of the mount location (/home/$USER/mnt) not exist, create it
+- in mount options, the "ro" and "rw" words are not intuitive for end-users that may not know it, change it to something like "ro: read only mode" and "rw: read and write mode"

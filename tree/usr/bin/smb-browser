@@ -1225,7 +1225,7 @@ scanbtn.set_tooltip_text(_("To enable this, check the 'Scan for other workgroups
 scanbtn.connect('clicked', st_func)
 fmbtn=gtk.Button(_("Browse"))
 fmbtn.connect('clicked', fm)
-srchbtn=gtk.Button(_("Search by Name or IP"))
+srchbtn=gtk.Button(_("Search by Host Name or IP"))
 srchbtn.connect('clicked', search,"default")
 
 bookmark_menu=gtk.MenuItem(_("Bookmarks"))
