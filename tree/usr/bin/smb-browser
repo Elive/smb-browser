@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.05"
+VERSION="1.05.1"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -791,6 +791,9 @@ def mount(widget):
 			sharemnt="\'//"+hostname+"/"+sharename+"\'"
 		host=hostname+"/"
 		mnt="\'"+mntlocal+ host+sharename+"\'"
+		nmcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
+		nmbinfo=nmcmd.stdout.readlines()
+		nmcmd.stdout.close()
 		method=""
 		for x in hostname:
 			if x !=".":
