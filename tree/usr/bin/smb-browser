@@ -577,7 +577,7 @@ def host_processor(hostname,userinfo,iter):
 		gtk.gdk.threads_leave()
 #		time.sleep(2)
 	if shares==[]:
-		MSG=_("No shares were found. Please check that")+" "+hostname+_("is sharing files. You may need to supply a username and password to find the shares.")
+		MSG=_("No shares were found. Please check that")+" "+hostname+" "+_("is sharing files. You may need to supply an username and password to find the shares.")
 		get_from_user=True
 #	fh2.close()
 	if get_from_user==True:
