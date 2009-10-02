@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.04.7"
+VERSION="1.04.8"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -475,11 +475,22 @@ def host_processor(hostname,userinfo,iter):
 		nmbLcmd.stdout.close()
 		#nmbfile=os.popen("nmblookup "+hostname)
 		print "2"
-		for line in nmbfile:
-#			print line
-			if "<00>" in line:
-				ip_add=line.split()[0]
-				print "IP Address: ",line.split()[0]
+		method=""
+		for x in hostname:
+			if x !=".":
+				try: 
+					int(x)
+				except:
+					method="Name"
+					break
+		if method=="Name":
+			for line in nmbfile:
+	#			print line
+				if "<00>" in line:
+					ip_add=line.split()[0]
+					print "IP Address: ",line.split()[0]
+		else:
+			ip_add=hostname
 #		nmbfile.close()
 		print "NOT IN THE HOSTIP DICT"
 		hostname1="\'"+hostname+"\'"
@@ -637,12 +648,24 @@ def set_pc_info(hostname):
 		nmbcmd.stdout.close()
 #		nmbfile=os.popen("nmblookup "+hostname)
 		print "2"
-		for line in nmbfile:
-#			print line
-			if "<00>" in line:
-				ip_add=line.split()[0]
-				print "IP Address: ",line.split()[0]
-				info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host name: ")+hostname+"\n"+_("IP Address: ")+ip_add)
+		method=""
+		for x in hostname:
+			if x !=".":
+				try: 
+					int(x)
+				except:
+					method="Name"
+					break
+		if method=="Name":
+			for line in nmbfile:
+	#			print line
+				if "<00>" in line:
+					ip_add=line.split()[0]
+					print "IP Address: ",line.split()[0]
+					info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host name: ")+hostname+"\n"+_("IP Address: ")+ip_add)
+#			if "name_query failed" in line:
+		else:
+			info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host name: ")+"Unknown"+"\n"+_("IP Address: ")+hostname)
 #		nmbfile.close()
 def st_func(button):
 #	print button.get_label()
@@ -885,7 +908,7 @@ def search(srchbtn,userinfo):
 #		null,OUTPUT,null2=os.popen3("smbclient -NL "+hostname)
 		smbCHcmd.stdout.close();smbCHcmd.stderr.close();smbCHcmd.stdin.close()
 		for line in OUTPUT:
-#			print line
+			print line
 			if "Connection to "+hostname+" failed" in line:
 				NEXT=False
 				return ERROR(line)
@@ -902,6 +925,7 @@ def search(srchbtn,userinfo):
 		#OUTPUT=os.popen("nmblookup -A "+hostip)
 #		OUTPUT=open("test-file")
 		for line in OUTPUT:
+			print line
 			if "No reply from" in line:
 				pcname=hostip
 				ip_add=hostip
@@ -914,6 +938,10 @@ def search(srchbtn,userinfo):
 				if "<GROUP>" not in line:## here we get the name of the pc##
 					pcname=line.rstrip().split()[0]
 		#OUTPUT.close()
+#		print pcname,"<<<<<<<<<<<<<<<<<<<<"
+#		print pcname.strip("\"").strip("'"),"<<<<<<<<<<<<<<<<<<<<"
+		if pcname.strip("\"").strip("'")=="":
+			pcname=hostip
 		n=1
 		ITER=wgtreestore.iter_nth_child(None, 0)
 		FOUND=False
