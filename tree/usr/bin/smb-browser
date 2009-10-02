@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.04.9"
+VERSION="1.05"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -93,7 +93,7 @@ def create_default_conf():
 							name=item.rsplit(" ",1)[0].strip()
 							tmpwgs=name
 #		wwgl.close()
-	return {'conf': {'version':VERSION, 'username': 'username', 'workgroup': tmpwgs, 'password': 'password', 'filemanager': 'thunar', 'mntlocal': HOME_PATH+"/mnt", 'flag': 'True', 'wgflag': 'False', 'clean': 'False', 'first_run': 'True',"mount_command":"smbmount"}}
+	return {'conf': {'version':VERSION, 'username': 'username', 'workgroup': tmpwgs, 'password': 'password', 'filemanager': 'thunar', 'mntlocal': HOME_PATH+"/Network", 'flag': 'True', 'wgflag': 'False', 'clean': 'False', 'first_run': 'True',"mount_command":"smbmount"}}
 def update_config():
 	print "updating configuration"
 	default_config=create_default_conf()
@@ -1462,16 +1462,19 @@ wgtext=gtk.TextView()
 scantext2=gtk.TextView()
 mtlocaltext=gtk.TextView()
 cleantext=gtk.TextView()
+sharingtext=gtk.TextView()
 scan2_content=gtk.TextView()
 wg_content=gtk.TextView()
 mtlocal_content=gtk.TextView()
 clean_content=gtk.TextView()
+sharing_content=gtk.TextView()
 ###Text Buffers
 scanbuf=scantext.get_buffer()
 wgbuf=wgtext.get_buffer()
 scan2buf=scantext2.get_buffer()
 mtlocalbuf=mtlocaltext.get_buffer()
 cleanbuf=cleantext.get_buffer()
+sharingbuf=sharingtext.get_buffer()
 searchbuf=searchtext.get_buffer()
 
 buffer = maintext.get_buffer ()
@@ -1482,6 +1485,7 @@ pref_content_buffer=prefcontent.get_buffer()
 scan2_content_buf=scan2_content.get_buffer()
 wg_content_buf=wg_content.get_buffer()
 clean_content_buf=clean_content.get_buffer()
+sharing_content_buf=sharing_content.get_buffer()
 mtlocal_content_buf=mtlocal_content.get_buffer()
 
 main_content_buffer.set_text("\t"+_("If you enable the scan function in the preferences, then Smb-browser will use nmblookup to find master browsers on the network. It will then search each master browser for a list of Workgroups. On larger networks, especially where computers  come and go a lot, this can take a long time. It is  faster to simply specify your Workgroup name in the preferences."))
@@ -1490,8 +1494,9 @@ wg_content_buf.set_text("\t"+_("Here you should specify the Workgroup or Workgro
 scan2_content_buf.set_text("\t"+_("See above."))
 mtlocal_content_buf.set_text("\t"+_("This is the location of where the Samba shares will be mounted on your computer. You must have write permissions for this directory."))
 clean_content_buf.set_text("\t"+_("If this is checked, then Smb-browser will remove the directories created when mounting shares. If it finds a file in one of the directories it will not remove it"))
+sharing_content_buf.set_text("\t"+_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, then try running 'smb-admin' as root or 'smb-usershare' as user. This may require you to install the package 'smb-admin'. You can also try alt-clicking on a folder in 'thunar' and choosing 'Properties' then 'Share'"))
 
-for x in [maincontent,maincontent2,prefcontent,maintext,preftext,scantext,searchtext,wgtext, scantext2, mtlocaltext, cleantext,scan2_content,wg_content,mtlocal_content,clean_content]:
+for x in [maincontent,maincontent2,prefcontent,maintext,preftext,scantext,searchtext,wgtext,sharingtext,sharing_content,scantext2, mtlocaltext, cleantext,scan2_content,wg_content,mtlocal_content,clean_content]:
 	x.set_wrap_mode(gtk.WRAP_WORD)
 	x.set_editable(False)
 for x in [maintext,preftext]:
@@ -1514,9 +1519,12 @@ insert_tag(wgbuf,_("Workgroup:"),"foreground","blue",12)
 insert_tag(scan2buf,_("Scan:"),"foreground","blue",12)
 insert_tag(mtlocalbuf,_("Mount Location:"),"foreground","blue",12)
 insert_tag(cleanbuf,_("Clean:"),"foreground","blue",12)
+insert_tag(sharingbuf,_("Sharing Your Files:"),"foreground","blue",12)
 helpbox.pack_start(maintext,False,True,0)
 helpbox.pack_start(scantext,False,True,0)
 helpbox.pack_start(maincontent,True,True,0)
+helpbox.pack_start(sharingtext,True,True,0)
+helpbox.pack_start(sharing_content,True,True,0)
 helpbox.pack_start(searchtext,False,True,0)
 helpbox.pack_start(maincontent2,True,True,0)
 helpbox.pack_start(preftext,False,True,0)
@@ -1674,10 +1682,6 @@ readconf1()
 lsmounted()
 load_bookmarks()
 if FIRST_RUN==False:
-	#~ if mnt_cmd_smb.get_active() == True:
-		#~ mnt_cmd="smbmount"
-	#~ elif mnt_cmd_cifs.get_active()==True:
-		#~ mnt_cmd="mount.cifs"
 	if check_for_mnt_cmd(config[conf]["mount_command"].strip()) ==False:
 		if config[conf]["mount_command"].strip() =="smbmount":
 			cmdtotry="mount.cifs"
