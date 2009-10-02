@@ -190,6 +190,16 @@ print MOUNT_CIFS_CMD
 print UMOUNT_CIFS_CMD
 username_pw_list={}
 #####parser####
+def is_ip(hostname):
+	IS_IP=True
+	for x in hostname:
+		if x !=".":
+			try: 
+				int(x)
+			except:
+				IS_IP=False
+				break
+	return IS_IP
 def ERROR(MSG):
 	d = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, buttons=gtk.BUTTONS_OK, message_format=MSG)
 	d.set_position(gtk.WIN_POS_CENTER_ALWAYS)
@@ -413,7 +423,6 @@ def wg_processor(wg_name,userinfo):
 	print "wg_name = ",wg_name
 	nmblcmd=subprocess.Popen("nmblookup "+wg_name.strip(),shell=True,stdout=subprocess.PIPE)
 	OUTPUT=nmblcmd.stdout.readlines()
-#	OUTPUT=os.popen("nmblookup "+wg_name.strip())
 	nmblcmd.stdout.close()
 	IP_ADRESSES=[]
 	for line in OUTPUT:
@@ -421,26 +430,25 @@ def wg_processor(wg_name,userinfo):
 		if "<00>" in line:
 			if line.rstrip().split()[0] not in IP_ADRESSES:
 				IP_ADRESSES.append(line.rstrip().split()[0])
-#	OUTPUT.close()
 	print IP_ADRESSES,"<<< here are the IP_ADRESSES"
 ##		THIS NEXT LOOP FINDS THE COMPUTER NAME FOR EACH IP ADDRESS##
 	for IP in IP_ADRESSES:
 		nmbAcmd=subprocess.Popen("nmblookup -A "+IP,shell=True,stdout=subprocess.PIPE)
 		OUTPUT=nmbAcmd.stdout.readlines()
 		nmbAcmd.stdout.close()
-		#OUTPUT=os.popen("nmblookup -A "+IP)
 		for line in OUTPUT:
 			if "<00>" in line:
 				if "<GROUP>" not in line:
 					name=line.rstrip().split()[0]
-					if name.strip("\"").strip("'")=="":
+					print "NAME>>>"+name
+					if name.strip("\"'").strip("'\"")=="":
 						name=IP
+						print "use ip instead of name ",name
 					gtk.gdk.threads_enter()
 					wgtreestore.append(iter, [(name)])
 					wgtreeview.expand_row(xy,True)
 					gtk.gdk.threads_leave()
 #					time.sleep(2)
-#		OUTPUT.close()
 	gtk.gdk.threads_enter()	
 	if wgtreestore.iter_nth_child(iter, 0) == None:
 		MSG=_("Sorry, We could not locate any hosts on")+" "+wg_name+"."
@@ -479,25 +487,17 @@ def host_processor(hostname,userinfo,iter):
 		nmbLcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
 		nmbfile=nmbLcmd.stdout.readlines()
 		nmbLcmd.stdout.close()
-		#nmbfile=os.popen("nmblookup "+hostname)
 		print "2"
-		method=""
-		for x in hostname:
-			if x !=".":
-				try: 
-					int(x)
-				except:
-					method="Name"
-					break
-		if method=="Name":
+		if is_ip(hostname)==False:
+			print "IS A NAME"
 			for line in nmbfile:
 	#			print line
 				if "<00>" in line:
 					ip_add=line.split()[0]
 					print "IP Address: ",line.split()[0]
 		else:
+			print "IS AN IP"
 			ip_add=hostname
-#		nmbfile.close()
 		print "NOT IN THE HOSTIP DICT"
 		hostname1="\'"+hostname+"\'"
 	if userinfo=="default":
@@ -652,27 +652,16 @@ def set_pc_info(hostname):
 		nmbcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
 		nmbfile=nmbcmd.stdout.readlines()
 		nmbcmd.stdout.close()
-#		nmbfile=os.popen("nmblookup "+hostname)
 		print "2"
-		method=""
-		for x in hostname:
-			if x !=".":
-				try: 
-					int(x)
-				except:
-					method="Name"
-					break
-		if method=="Name":
+		if is_ip(hostname)==False:
 			for line in nmbfile:
 	#			print line
 				if "<00>" in line:
 					ip_add=line.split()[0]
 					print "IP Address: ",line.split()[0]
 					info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host name: ")+hostname+"\n"+_("IP Address: ")+ip_add)
-#			if "name_query failed" in line:
 		else:
 			info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host name: ")+"Unknown"+"\n"+_("IP Address: ")+hostname)
-#		nmbfile.close()
 def st_func(button):
 #	print button.get_label()
 #	print "starting"
@@ -794,15 +783,7 @@ def mount(widget):
 		nmcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
 		nmbinfo=nmcmd.stdout.readlines()
 		nmcmd.stdout.close()
-		method=""
-		for x in hostname:
-			if x !=".":
-				try: 
-					int(x)
-				except:
-					method="Name"
-					break
-		if method=="Name":
+		if is_ip(hostname)==False:
 			for line in nmbinfo:
 				if "<00>" in line:
 					ip_add=line.split()[0]
@@ -818,17 +799,9 @@ def mount(widget):
 		nmcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
 		nmbinfo=nmcmd.stdout.readlines()
 		nmcmd.stdout.close()
-		#nmbinfo =os.popen("nmblookup "+hostname)
-		method=""
-		for x in hostname:
-			if x !=".":
-				try: 
-					int(x)
-				except:
-					method="Name"
-					break
-		if method=="Name":
+		if is_ip(hostname)==False:
 			for line in nmbinfo:
+				
 				if "<00>" in line:
 					ip_add=line.split()[0]
 		else:
@@ -836,7 +809,6 @@ def mount(widget):
 		print SELECTED_BOOMARK
 		sharemnt="\'"+config["bookmarks"][key]["share_name"]+"\'"
 		mnt="\'"+config["bookmarks"][key]["mount_location"]+"\'"
-#		nmbinfo.close()
 	###the server/share names and mount location have been set above, now we get all the options other than uname and pw
 	addoptions=''
 	MN=mntops_entry.get_text().strip(",")
@@ -911,19 +883,11 @@ def search(srchbtn,userinfo):
 	for x in wgtreestore:
 		WORKGROUPS.append(wgtreestore.get_value(x.iter,0))
 ## 	this loop parses the hostname that is being searched for to see if it contains any letters... thus being a name not an ip##
-	for x in hostname:
-		if x !=".":
-			try: 
-				int(x)
-			except:
-				method="Name"
-				break
-	print "Searching by "+method
-	if method =="Name":	##this method searches by name
+	if is_ip(hostname)==False: ##this method searches by name
+		print "HERE WE GO\n\n\n\n\n\n"
 		nmbLHcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
 		OUTPUT=nmbLHcmd.stdout.readlines()
 		nmbLHcmd.stdout.close()
-		#OUTPUT=os.popen("nmblookup "+hostname)
 		for line in OUTPUT:
 			if "<00>" in line:
 #				print line
@@ -931,11 +895,10 @@ def search(srchbtn,userinfo):
 				NEXT=True
 			elif "failed to find" in line:
 				return ERROR(line)
-#		OUTPUT.close()
 	else:##this method searches by ip adress
+		print "HERE GOES ELSE\n\n\n\n\n"
 		smbCHcmd=subprocess.Popen("smbclient -NL "+hostname,shell=True,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		OUTPUT=smbCHcmd.stdout.readlines()
-#		null,OUTPUT,null2=os.popen3("smbclient -NL "+hostname)
 		smbCHcmd.stdout.close();smbCHcmd.stderr.close();smbCHcmd.stdin.close()
 		for line in OUTPUT:
 			print line
@@ -945,15 +908,12 @@ def search(srchbtn,userinfo):
 			else:
 				hostip=hostname
 				NEXT=True
-		#OUTPUT.close();null.close();null2.close()
 	if NEXT==True:		##here we do somethign with the ip of the computer being searched for"
 		print "Running NEXT"
 		wgname=''		##here we are just setting a variable to be filled later
 		nmbHIcmd=subprocess.Popen("nmblookup -A "+hostip,shell=True,stdout=subprocess.PIPE)
 		OUTPUT=nmbHIcmd.stdout.readlines()
 		nmbHIcmd.stdout.close()
-		#OUTPUT=os.popen("nmblookup -A "+hostip)
-#		OUTPUT=open("test-file")
 		for line in OUTPUT:
 			print line
 			if "No reply from" in line:
@@ -967,10 +927,9 @@ def search(srchbtn,userinfo):
 					wgname=line.split()[0]
 				if "<GROUP>" not in line:## here we get the name of the pc##
 					pcname=line.rstrip().split()[0]
-		#OUTPUT.close()
 #		print pcname,"<<<<<<<<<<<<<<<<<<<<"
 #		print pcname.strip("\"").strip("'"),"<<<<<<<<<<<<<<<<<<<<"
-		if pcname.strip("\"").strip("'")=="":
+		if pcname.strip("\"'").strip("'\"")=="":
 			pcname=hostip
 		n=1
 		ITER=wgtreestore.iter_nth_child(None, 0)
