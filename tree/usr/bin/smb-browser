@@ -577,7 +577,7 @@ def host_processor(hostname,userinfo,iter):
 		gtk.gdk.threads_leave()
 #		time.sleep(2)
 	if shares==[]:
-		MSG=_("No shares were found. Please check that")+" "+hostname+" "+_("is sharing files. You may need to supply an username and password to find the shares.")
+		MSG=_("No shares were found. Please check that")+" "+hostname+" "+_("is sharing files. You may need to supply a username and password to find the shares.")
 		get_from_user=True
 #	fh2.close()
 	if get_from_user==True:
@@ -841,7 +841,7 @@ def mount(widget):
 		addoptions=addoptions+","+MN
 	model = mnt_rwro.get_model()
 	index = mnt_rwro.get_active()
-	if model[index][0] =="ro":
+	if model[index][0].split()[0] =="ro":
 		addoptions=addoptions+",ro"
 	print addoptions+"this is add options"
 	addoptions=addoptions+"ip="+ip_add
@@ -1291,7 +1291,7 @@ def abtfunc(x):
 	x.set_comments(_("This program was designed to assist users in finding and mounting samba shared folders on a network while being easy yet functional."))
 	x.show()
 about.connect("clicked",abtfunc)
-scanbtn=gtk.Button(_('Search'))
+scanbtn=gtk.Button(_('Scan for workgroups'))
 scanbtn.set_tooltip_text(_("To enable this, check the 'Scan for other workgroups' option in the preferences"))
 scanbtn.connect('clicked', st_func)
 fmbtn=gtk.Button(_("Browse"))
@@ -1544,8 +1544,8 @@ mntops_entry=gtk.Entry()
 mntoptbox.put(mntops,0,300)#pack_start(mntops,False, False, 2)
 mntoptbox.put(mntops_entry,190,300)#pack_start(mntops_entry,False, False, 2)
 mnt_rwro= gtk.combo_box_new_text()
-mnt_rwro.append_text("rw")
-mnt_rwro.append_text("ro")
+mnt_rwro.append_text("rw ("+_("Read and Write"))
+mnt_rwro.append_text("ro ("+_("Read Only")+")")
 mnt_rwro.set_active(0)
 mntoptbox.put(mnt_rwro,0,0)#pack_start(mnt_rwro,False, False, 2)
 ####End Mount Options Tab#####
