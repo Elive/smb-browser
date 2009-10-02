@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.04.8"
+VERSION="1.04.9"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -429,6 +429,8 @@ def wg_processor(wg_name,userinfo):
 			if "<00>" in line:
 				if "<GROUP>" not in line:
 					name=line.rstrip().split()[0]
+					if name.strip("\"").strip("'")=="":
+						name=IP
 					gtk.gdk.threads_enter()
 					wgtreestore.append(iter, [(name)])
 					wgtreeview.expand_row(xy,True)
@@ -778,11 +780,27 @@ def mount(widget):
 		sharename =selected_treestore.get_value(iter, 0)
 		hostname=wgtreestore.get_value(selected_treestore.iter_parent(iter),0)
 		if hostname in host_ip_dict:
+			print "found in host_ip_dict"
 			sharemnt="\'//"+host_ip_dict[hostname]+"/"+sharename+"\'"
 		else:
+			print "not_found in host_ip_dict"
 			sharemnt="\'//"+hostname+"/"+sharename+"\'"
 		host=hostname+"/"
 		mnt="\'"+mntlocal+ host+sharename+"\'"
+		method=""
+		for x in hostname:
+			if x !=".":
+				try: 
+					int(x)
+				except:
+					method="Name"
+					break
+		if method=="Name":
+			for line in nmbinfo:
+				if "<00>" in line:
+					ip_add=line.split()[0]
+		else:
+			ip_add=hostname
 	elif type(widget)==gtk.MenuItem:
 		print "menu activatd"
 		print "#################"
@@ -794,9 +812,20 @@ def mount(widget):
 		nmbinfo=nmcmd.stdout.readlines()
 		nmcmd.stdout.close()
 		#nmbinfo =os.popen("nmblookup "+hostname)
-		for line in nmbinfo:
-			if "<00>" in line:
-				ip_add=line.split()[0]
+		method=""
+		for x in hostname:
+			if x !=".":
+				try: 
+					int(x)
+				except:
+					method="Name"
+					break
+		if method=="Name":
+			for line in nmbinfo:
+				if "<00>" in line:
+					ip_add=line.split()[0]
+		else:
+			ip_add=hostname
 		print SELECTED_BOOMARK
 		sharemnt="\'"+config["bookmarks"][key]["share_name"]+"\'"
 		mnt="\'"+config["bookmarks"][key]["mount_location"]+"\'"
