@@ -103,7 +103,6 @@ def update_config():
 			config[conf][setting]=default_config[conf][setting]
 		elif setting in["wgflag","flag","clean","first_run"]:
 			if config[conf][setting].lower() not in ["true","false"]:
-				print "hi thanatermeis"
 				config[conf][setting]=default_config[conf][setting]
 	config[conf]["version"]=default_config[conf]["version"]
 	config.write()
@@ -111,7 +110,7 @@ def update_config():
 	
 def import_conf():
 	try:
-		config=configobj.ConfigObj("/home/david/.smb-browser.conf")
+		config=configobj.ConfigObj(HOME_PATH+"/.smb-browser.conf")
 	except:
 		print "this is the except"
 		config=False
@@ -146,6 +145,7 @@ else:
 			print "update 2"
 			update_config()
 	else:
+		print "hi thana"
 		config=configobj.ConfigObj(create_default_conf())
 		config.filename=configfile
 		config.write()		
