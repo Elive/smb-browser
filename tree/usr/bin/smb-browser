@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.04.6"
+VERSION="1.04.7"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -60,22 +60,8 @@ info_data=gtk.Label("")
 info_lbl=gtk.Label("\t"+_("Computer Information"))
 host_ip_dict={}
 FIRST_RUN=False;DEPTH1=False;DEPTH2=False;DEPTH3=False;FIND=False;RUN=False;CLEARING=False;SELECTED_BOOKMARK=''
-SMBMOUNT_CMD="smbmount"
-SMBUMOUNT_CMD="smbumount"
-whereiscmd=subprocess.Popen("whereis mount.cifs",shell=True,stdout=subprocess.PIPE)
-output=whereiscmd.stdout.readlines()
-whereiscmd.stdout.close()
-for x in output[0].split():
-	if "mount.cifs" in x:
-		MOUNT_CIFS_CMD=x
-		UMOUNT_CIFS_CMD=x.split("mount.cifs")[0].rstrip("/")+"/umount.cifs"
-		break
-	else:
-		MOUNT_CIFS_CMD=None
 
 
-print MOUNT_CIFS_CMD
-print UMOUNT_CIFS_CMD
 ###############
 def create_default_conf():
 	tmpwgs=""
@@ -161,7 +147,22 @@ else:
 		config.write()		
 
 ###############
+whereiscmd=subprocess.Popen("whereis mount.cifs",shell=True,stdout=subprocess.PIPE)
+output=whereiscmd.stdout.readlines()
+whereiscmd.stdout.close()
+for x in output[0].split():
+	if "mount.cifs" in x:
+		MOUNT_CIFS_CMD=x
+		UMOUNT_CIFS_CMD=x.split("mount.cifs")[0].rstrip("/")+"/umount.cifs"
+		break
+	else:
+		MOUNT_CIFS_CMD=None
+		UMOUNT_CIFS_CMD=None
+
 def check_for_mnt_cmd(cmd):
+	if cmd==None:
+		print "command was None, hence not found"
+		return False
 	cmdinfo=subprocess.Popen(cmd+" -V ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	error=cmdinfo.stderr.readlines()
 	output=cmdinfo.stdout.readlines()
@@ -173,7 +174,16 @@ def check_for_mnt_cmd(cmd):
 		if "version" in output[0].lower():
 			print "version was printed, command present"
 		return True
-
+if check_for_mnt_cmd("smbmount")==True:
+	SMBMOUNT_CMD="smbmount"
+	SMBUMOUNT_CMD="smbumount"
+else:
+	SMBMOUNT_CMD=None
+	SMBUMOUNT_CMD=None
+print SMBMOUNT_CMD
+print SMBUMOUNT_CMD
+print MOUNT_CIFS_CMD
+print UMOUNT_CIFS_CMD
 username_pw_list={}
 #####parser####
 def ERROR(MSG):
@@ -1329,7 +1339,7 @@ clncheckbox=gtk.CheckButton(_("Clean directories"))
 clncheckbox.set_tooltip_text(_("This will remove empty directories when unmounting."))
 clncheckbox.connect('clicked', clean)
 mnt_cmd_cifs=gtk.RadioButton(None,"mount.cifs")
-mnt_cmd_cifs.set_tooltip_text(_("This typically requires you to SUID the mount.cifs command in order to be run as user. To do this, run the following commands as root:")+" chmod u+s "+MOUNT_CIFS_CMD+" & chmod u+s "+UMOUNT_CIFS_CMD)
+mnt_cmd_cifs.set_tooltip_text(_("This typically requires you to SUID the mount.cifs command in order to be run as user. To do this, run the following commands as root:")+" chmod u+s "+str(MOUNT_CIFS_CMD)+" & chmod u+s "+str(UMOUNT_CIFS_CMD))
 
 
 mnt_cmd_smb=gtk.RadioButton(mnt_cmd_cifs,"smbmount")
@@ -1501,6 +1511,10 @@ window.show_all()
 
 
 def readconf():
+	if MOUNT_CIFS_CMD == None and SMBMOUNT_CMD == None:
+			print "no mount commands available"
+			ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' pacakge"))
+			sys.exit()
 	print "read conf "
 	print "this is activated at startup"
 	global mntlocal
@@ -1518,17 +1532,18 @@ def readconf():
 		print "Activateing smbmount"
 		mnt_cmd_smb.set_active(True)
 	elif "mount.cifs" in config[conf]["mount_command"].strip():
-		if os.stat(MOUNT_CIFS_CMD).st_mode & stat.S_ISUID ==0:
-			if os.getuid()!=0:
-				print "not SUID and not root"
-				if check_for_mnt_cmd("smbmount")==True:
-					mnt_cmd_smb.set_active(True)
-					ERROR(_("It appears that you are not 'root' and that your mount.cifs command is not SUID. We found 'smbmount' and have changed your configurations to use that. To use mount.cifs, please run the following as root in a terminal: chmod u+s ")+str(MOUNT_CIFS_CMD))
-				else:
-					ERROR(_("It appears that you are not 'root' and that your mount.cifs command is not SUID. Until this is fixed, you will not be able to mount shares as user. Please run the following as root in a terminal: chmod u+s ")+str(MOUNT_CIFS_CMD))
-		else:
-			print "Activateing cifs"
-			mnt_cmd_cifs.set_active(True)
+		if MOUNT_CIFS_CMD !=None:
+			if os.stat(MOUNT_CIFS_CMD).st_mode & stat.S_ISUID ==0:
+				if os.getuid()!=0:
+					print "not SUID and not root"
+					if check_for_mnt_cmd("smbmount")==True:
+						mnt_cmd_smb.set_active(True)
+						ERROR(_("It appears that you are not 'root' and that your mount.cifs command is not SUID. We found 'smbmount' and have changed your configurations to use that. To use mount.cifs, please run the following as root in a terminal: chmod u+s ")+str(MOUNT_CIFS_CMD))
+					else:
+						ERROR(_("It appears that you are not 'root' and that your mount.cifs command is not SUID. Until this is fixed, you will not be able to mount shares as user. Please run the following as root in a terminal: chmod u+s ")+str(MOUNT_CIFS_CMD))
+			else:
+				print "Activateing cifs"
+				mnt_cmd_cifs.set_active(True)
 	tup= wg_entry.get_text()
 	x=wgcheckbox.get_active()
 	wgtreestore.clear()
@@ -1544,19 +1559,24 @@ def readconf1():
 	if config[conf]["first_run"] in ["True",True]:
 		FIRST_RUN=True
 		print "running first run checks"
-		if check_for_mnt_cmd(config[conf]["mount_command"].strip()) ==False:
-			print "mount command not found"
-			if config[conf]["mount_command"].strip() ==SMBMOUNT_CMD:
-				print "try mount.cifs"
-				cmdtotry=MOUNT_CIFS_CMD
-				if check_for_mnt_cmd(MOUNT_CIFS_CMD) == False:
-					ERROR(_("Could not find mount.cifs or smbmount"))
-			else:
-				print "try smbmount"
-				cmdtotry=SMBMOUNT_CMD
-				if check_for_mnt_cmd(SMBMOUNT_CMD) == False:
-					ERROR(_("Could not find mount.cifs or smbmount"))
-			config[conf]["mount_command"]=cmdtotry
+		if MOUNT_CIFS_CMD == None and SMBMOUNT_CMD == None:
+			print "no mount commands available"
+			ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' pacakge"))
+			sys.exit()
+		#~ if check_for_mnt_cmd(config[conf]["mount_command"].strip()) ==False:
+			#~ print "mount command not found"
+			#~ if config[conf]["mount_command"].strip() ==SMBMOUNT_CMD:
+				#~ print "try mount.cifs"
+				#~ cmdtotry=MOUNT_CIFS_CMD
+				#~ #if MOUNT_CIFS_CMD != None:
+				#~ if check_for_mnt_cmd(MOUNT_CIFS_CMD) == False:
+					#~ ERROR(_("Could not find mount.cifs or smbmount"))
+			#~ else:
+				#~ print "try smbmount"
+				#~ cmdtotry=SMBMOUNT_CMD
+				#~ if check_for_mnt_cmd(SMBMOUNT_CMD) == False:
+					#~ ERROR(_("Could not find mount.cifs or smbmount"))
+			#~ config[conf]["mount_command"]=cmdtotry
 		print "first run = ",config[conf]["first_run"]
 		notebook.set_current_page(1)
 		config[conf]["first_run"]=False
