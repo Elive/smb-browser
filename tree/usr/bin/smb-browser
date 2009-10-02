@@ -861,19 +861,13 @@ def mount(widget):
 	mntedcmd=subprocess.Popen("mount",shell=True,stdout=subprocess.PIPE)
 	mounted_volumes=mntedcmd.stdout.readlines()
 	mntedcmd.stdout.close()
-#	mounted_volumes=os.popen("mount")
 	for line in mounted_volumes:
 		if line.startswith(sharemnt.strip("'")):
 			print "already mounted"
-			mounted_volumes.close()
-			#~ bookmarks_cmb.set_active(0)
-#			mounted_volumes.close()
 			return ERROR(_("That share is already mounted"))
 			
-	#mounted_volumes.close()
 	if os.access(mnt,0)==False:
 		mkdircmd=subprocess.Popen("mkdir -p "+mnt,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-		#(error,output)=commands.getstatusoutput("mkdir -p "+mnt)
 		error=mkdircmd.stderr.readlines()
 		if error != []:
 			ERROR(error[0])
