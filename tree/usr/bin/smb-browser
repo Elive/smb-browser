@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.05.1"
+VERSION="1.05.2"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -69,20 +69,16 @@ def create_default_conf():
 	nmcmd=subprocess.Popen("nmblookup -A localhost",shell=True,stdout=subprocess.PIPE)
 	nm=nmcmd.stdout.readlines()
 	nmcmd.stdout.close()
-#	nm=os.popen("nmblookup -A localhost")
 	for line in nm:
 		if "<00>" in line:
 			if "<GROUP>" in line:
 				line=line.rstrip()
 				line=line.split()
 				tmpwgs=line[0]
-#	nm.close()
 	if tmpwgs =="":
 		print "starting"
 		smbclcmd=subprocess.Popen("smbclient -NL localhost",shell=True,stdout=subprocess.PIPE)
 		wgl=smbclcmd.stdout.readlines()
-		#wwgl=os.popen("smbclient -NL localhost")
-		#wgl=wwgl.readlines()
 		smbclcmd.stdout.close()
 		if "Connection to localhost failed\n" not in wgl:
 			for item in wgl:
@@ -92,7 +88,6 @@ def create_default_conf():
 						for item in y:
 							name=item.rsplit(" ",1)[0].strip()
 							tmpwgs=name
-#		wwgl.close()
 	return {'conf': {'version':VERSION, 'username': 'username', 'workgroup': tmpwgs, 'password': 'password', 'filemanager': 'thunar', 'mntlocal': HOME_PATH+"/Network", 'flag': 'True', 'wgflag': 'False', 'clean': 'False', 'first_run': 'True',"mount_command":"smbmount"}}
 def update_config():
 	print "updating configuration"
@@ -236,21 +231,17 @@ def findwgs():
 	nmlcmd=subprocess.Popen("nmblookup \"*\"",shell=True,stdout=subprocess.PIPE)
 	OUTPUT=nmlcmd.stdout.readlines()
 	nmlcmd.stdout.close()
-#	OUTPUT=os.popen("nmblookup \"*\"")
 	for line in OUTPUT:
 		if "<00>" in line:
 			line=line.rstrip().split()
 			MASTER_IPS.append(line[0])
-#	OUTPUT.close()
 	nmbMcmd=subprocess.Popen("nmblookup -M -- -",shell=True,stdout=subprocess.PIPE)
 	OUTPUT=nmbMcmd.stdout.readlines()
-#	OUTPUT=os.popen("nmblookup -M -- -")
 	for line in OUTPUT:
 		if "<" in line:
 			line=line.rstrip().split()
 			if line[0] not in MASTER_IPS:
 				MASTER_IPS.append(line[0])
-#	OUTPUT.close()
 	nmbMcmd.stdout.close()
 	###here we have a list of ips for the master browsers, now we will get names for them and their workgrous####
 	WORKGROUPS=[]
@@ -259,7 +250,6 @@ def findwgs():
 		nmbAcmd=subprocess.Popen("nmblookup -A "+IP,shell=True,stdout=subprocess.PIPE)
 		OUTPUT=nmbAcmd.stdout.readlines()
 		nmbAcmd.stdout.close()
-		#OUTPUT=os.popen("nmblookup -A "+IP)
 		for line in OUTPUT:
 			if "<00>" in line:
 #				print line
@@ -281,7 +271,6 @@ def findwgs():
 							gtk.gdk.threads_enter()
 							wgtreestore.append(None, [line])
 							gtk.gdk.threads_leave()
-		#OUTPUT.close()
 	###here we begin to scan each master browser for a list of alternate workgroups###"
 	print MASTERS
 #	time.sleep(2)
@@ -292,8 +281,6 @@ def findwgs():
 		smbcmd.stdin.close()
 		smbcmd.stdout.close()
 		smbcmd.stderr.close()
-#		null,OUTPUT,null2=os.popen3("smbclient -NL "+pc)
-#		OUTPUT2=OUTPUT.readlines()
 		for x in OUTPUT2:
 			if "LOGON_FAILURE" in x:
 				MSG=x+"\n"+_("Please check that your username and password are correct. Or check the 'guest' box in the preferences.")
@@ -314,7 +301,6 @@ def findwgs():
 								gtk.gdk.threads_leave()
 						else:
 							print name+" already exists"
-#		null.close();null2.close();OUTPUT.close()
 		print "Done Closing"
 		FIND=False
 	gtk.gdk.threads_enter()
@@ -456,8 +442,7 @@ def wg_processor(wg_name,userinfo):
 	gtk.gdk.threads_leave()
 	DEPTH1=False
 	end_bar(_("Done Scanning."))
-	
-	
+
 def host_processor(hostname,userinfo,iter):
 	global DEPTH2
 	get_from_user=False
@@ -509,7 +494,6 @@ def host_processor(hostname,userinfo,iter):
 		user=userinfo
 ##checking as guest
 	smbCcmd=subprocess.Popen("smbclient  -NL"+hostname1+" -I "+ip_add,shell=True,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	#null,fh2,null2=os.popen3("smbclient  -NL"+hostname1+" -I "+ip_add)
 	fh2=smbCcmd.stdout.readlines()
 	smbCcmd.stdout.close()
 	smbCcmd.stderr.close()
@@ -523,13 +507,11 @@ def host_processor(hostname,userinfo,iter):
 				shares.append(line)
 				print shares
 	print "done with guest"
-#	null.close();fh2.close();null2.close()
 ##checking as user  if  so set in the preferences
 	if user.strip()!="-NL":
 		print "##check as user"
 		print "smbclient  "+user+hostname1+" -I "+ip_add
 		smbCLcmd=subprocess.Popen("smbclient  "+user+hostname1+" -I "+ip_add,shell=True,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-		#null,fh2,null2=os.popen3("smbclient  "+user+hostname1+" -I "+ip_add)
 		fh2=smbCLcmd.stdout.readlines()
 		smbCLcmd.stdout.close()
 		smbCLcmd.stderr.close()
@@ -544,7 +526,6 @@ def host_processor(hostname,userinfo,iter):
 					user=" -U "+username_pw_list[hostname]["user"]+"%"+username_pw_list[hostname]["password"]+" -L "
 					print "smbclient  "+user+hostname1+" -I "+ip_add
 					smbclcmd=subprocess.Popen("smbclient  "+user+hostname1+" -I "+ip_add,shell=True,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-					#null,fh2,null2=os.popen3("smbclient  "+user+hostname1+" -I "+ip_add)
 					fh2=smbclcmd.stdout.readlines()
 					smbclcmd.stdout.close()
 					smbclcmd.stderr.close()
@@ -559,7 +540,6 @@ def host_processor(hostname,userinfo,iter):
 						elif "LOGON_FAIL" in line:
 							MSG=_("Logon Failed! Please enter your:")
 							get_from_user=True
-					#null.close();null2.close();fh2.close()
 				else:
 					MSG=_("Logon Failed! Please enter your:")
 					get_from_user=True
@@ -568,7 +548,6 @@ def host_processor(hostname,userinfo,iter):
 				line=line.rstrip()
 				if line not in shares:
 					shares.append(line)
-#		null.close();null2.close();fh2.close()
 	xy=wgtreestore.get_path(iter)
 	for item in shares:
 		gtk.gdk.threads_enter()
@@ -962,7 +941,6 @@ def lsmounted():
 	lsmntcmd=subprocess.Popen("mount",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	output=lsmntcmd.stdout.readlines()
 	lsmntcmd.stdout.close();lsmntcmd.stderr.close()
-#	error,output=os.popen2("mount")
 	for item in output:
 		if "smbfs" in item:
 			item2=item.rstrip()
@@ -971,8 +949,6 @@ def lsmounted():
 			item3=item.rstrip()
 			print item3
 			lshare.append(item3[item3.index(" on ")+4:item3.index(" type cifs")])
-#	error.close()
-#	output.close()
 	mntedlist.clear()
 	z=0	
 	for item in lshare:	
@@ -997,10 +973,10 @@ def fm(fmbtn):
 	if unmnt !='':
 		location=unmnt
 		print fmngr+" \""+location+"\" &"+"1"
-		os.system(fmngr+" \""+location+"\" &")
+		subprocess.Popen(fmngr+" \""+location+"\"",shell=True)
 	else:
-		print fmngr+" $HOME/mnt &"+"2"
-		os.system(fmngr+" $HOME/mnt &")
+		print fmngr+" "+config[conf]["mntlocal"]+" &"+"2"
+		subprocess.Popen(fmngr+" "+config[conf]["mntlocal"],shell=True)
 
 def save(savebtn):
 	y=checkbox.get_active()
@@ -1011,7 +987,6 @@ def save(savebtn):
 	unamevar=uname_entry.get_text()
 	fmvar=fm_entry.get_text()
 	localvar=mntlocal_entry.get_text()
-#	mnt_cmd="mount.cifs"
 	if mnt_cmd_smb.get_active() == True:
 		mnt_cmd=SMBMOUNT_CMD
 	elif mnt_cmd_cifs.get_active()==True:
@@ -1104,7 +1079,6 @@ def add_bookmark(add_btn):
 	mnted_vols_cmd=subprocess.Popen("mount",shell=True,stdout=subprocess.PIPE)
 	mounted_volumes=mnted_vols_cmd.stdout.readlines()
 	mnted_vols_cmd.stdout.close()
-	#mounted_volumes=os.popen("mount")
 	for line in mounted_volumes:
 		if itemclicked in line:
 			line=line.split(" on /")
@@ -1119,7 +1093,6 @@ def add_bookmark(add_btn):
 				load_bookmarks()
 			else:
 				print "already bookmarked"
-	#mounted_volumes.close()
 
 def del_bookmark(widget):
 	global SELECTED_BOOMARK
