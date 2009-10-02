@@ -64,6 +64,7 @@ FIRST_RUN=False;DEPTH1=False;DEPTH2=False;DEPTH3=False;FIND=False;RUN=False;CLEA
 
 ###############
 def create_default_conf():
+	print "creating default config"
 	tmpwgs=""
 	nmcmd=subprocess.Popen("nmblookup -A localhost",shell=True,stdout=subprocess.PIPE)
 	nm=nmcmd.stdout.readlines()
@@ -121,6 +122,8 @@ if os.access(configfile,0)==False:
 	config.write()
 else:
 	config=import_conf()
+	print config
+	print config.keys()
 	if config==False:
 		print "import of configuration file failed"
 		config=configobj.ConfigObj(create_default_conf())
