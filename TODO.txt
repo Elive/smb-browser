@@ -12,3 +12,5 @@
  * automatic scanning startup when the first tab is reached :)  (may we need a Stop button there too)
 
  * when i click in "workgroup" i see my other computers but i see the mine too, what do you think about remove the "own" computer from the list ?
+ 
+ * since it is an application for browse/mount but the user will want to share too, at the startup show a kind of "do not show again this message", just explaining to the user that if want to share an application (just because is hard to found) needs to click in thunar... bla bla", maybe also say how to do a fast browse (click in the first tab and then in the workgroup thing, then select something and click in mount, tadaaa"
