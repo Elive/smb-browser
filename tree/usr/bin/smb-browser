@@ -670,10 +670,15 @@ def umount(umntbtn):
 		UMOUNT_CMD=UMOUNT_CIFS_CMD
 	elif "smbmount" in config[conf]["mount_command"].strip():
 		UMOUNT_CMD=SMBUMOUNT_CMD
-	(badd,output)=commands.getstatusoutput(UMOUNT_CMD+" \'"+unmnt+"\'")
-	if badd:
-			ERROR(output)
-	if not badd:
+	umntcmd=subprocess.Popen(UMOUNT_CMD+" \'"+unmnt+"\'",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+#	(badd,output)=commands.getstatusoutput(UMOUNT_CMD+" \'"+unmnt+"\'")
+	output=umntcmd.stdout.readlines()
+	umntcmd.stdout.close()
+	errors=umntcmd.stderr.readlines()
+	umntcmd.stderr.close()
+	if umntcmd.wait() !=0:
+			ERROR("".join(output))
+	else:
 		if clncheckbox.get_active() == True:
 			os.removedirs(unmnt)
 	umntbtn.set_sensitive(False)
@@ -719,6 +724,7 @@ def get_uname_pw(nothing,MSG,hostname):
 	print response," this is the repsonze"
 
 def mount_by_user_input(addoptions,MSG,sharemnt,mnt):
+	print "\n\n\n\nMOUNT BY USER INPUT\n\n\n\n"
 	section=sharemnt.lstrip("'//").split("/")[0]
 	username,password= get_uname_pw(None,MSG,section)
 	MOUNT_CMD=config[conf]["mount_command"]
@@ -728,17 +734,27 @@ def mount_by_user_input(addoptions,MSG,sharemnt,mnt):
 		user_options="username="+username+"%"+password
 	else:
 		return
-	failed2,output2=commands.getstatusoutput(MOUNT_CMD+"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions)
+	mntproc=subprocess.Popen(MOUNT_CMD+"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	output=''.join(mntproc.stdout.readlines())
+	mntproc.stdout.close()
+	errors=''.join(mntproc.stderr.readlines())
+	mntproc.stderr.close()
 	print MOUNT_CMD+"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions
-	if failed2:
+	if mntproc.wait() !=0:
 		print "####################\n################"
-		print output2
-		return mount_by_user_input(addoptions," "+_("Access Denied! Please enter your:"),sharemnt,mnt)
+		print output
+		return mount_by_user_input(addoptions," "+output+"\n"+_("Access Denied! Please enter your:"),sharemnt,mnt)
 	else:
-		#~ bookmarks_cmb.set_active(0)
 		progbar.set_text(_("Done mounting")+" "+sharemnt)
 		return lsmounted()
-
+def universal_mount(mntcmd,options):
+	mntshare=subprocess.Popen(mntcmd+"  "+options,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	output=''.join(mntshare.stdout.readlines())
+	mntshare.stdout.close()
+	errors=''.join(mntshare.stderr.readlines())
+	mntshare.stderr.close()
+	returncode=mntshare.wait()
+	return returncode,output,errors
 def mount(widget):
 	print "######### starting mount#################"
 	global ip_add,CLEARING,SELECTED_BOOKMARK
@@ -822,23 +838,26 @@ def mount(widget):
 		error=mkdircmd.stderr.readlines()
 		if error != []:
 			ERROR(error[0])
-	failed1,output1=commands.getstatusoutput(MOUNT_CMD+"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions)
+	returncode,output,errors=universal_mount(MOUNT_CMD,"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions)
+	print returncode
+	print output
+	print errors
+	print "end for now\n\n\n\n\n\n"
 	print MOUNT_CMD+"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions," <<<1"
-	if failed1:
-		print output1
-		if "denied" in output1:
+	if returncode !=0:
+		print output
+		if "denied" in output:
 			print "lets get check our running list for info"
 			if hostname in username_pw_list.keys():
 				print "FOUND HOSTNAME"
 				user_options="username="+username_pw_list[hostname]["user"]+"%"+username_pw_list[hostname]["password"]
-				failed2,output2=commands.getstatusoutput(MOUNT_CMD+"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions)
 				print MOUNT_CMD+"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions," <<<2"
-				if failed2:
+				returncode2,output2,errors2=universal_mount(MOUNT_CMD,"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions)
+				if returncode2 !=0: 
 					if "denied" in output2:
 						return mount_by_user_input(addoptions," "+_("Access Denied! Please enter your:"),sharemnt,mnt)
 						#return mount_by_user_input(addoptions," Access Denied! Please enter \n your:")
 				else:
-					#~ bookmarks_cmb.set_active(0)
 					progbar.set_text(_("Done mounting")+" "+sharemnt)
 					return lsmounted()
 			else:
@@ -1115,6 +1134,10 @@ def del_bookmark(widget):
 
 def umount_as_root(widget):
 	print "success"
+#	gksucmd=subprocess.Popen("gksu -m \""+_("You have requested to unmount the share with root permissions. Please enter the root password.")+"\" -u root umount "+"\'"+unmnt+"\'",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+#	returncode=gksucmd.wait()
+#	output=''.join(gksucmd.stdout.readlines())
+#	errors=''.join(gksucmd.stderr.readlines())
 	error,output=commands.getstatusoutput("gksu -m \""+_("You have requested to unmount the share with root permissions. Please enter the root password.")+"\" -u root umount "+"\'"+unmnt+"\'")
 	if "error" in output:
 			print "ERROR"
