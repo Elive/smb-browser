@@ -14,3 +14,5 @@
  * when i click in "workgroup" i see my other computers but i see the mine too, what do you think about remove the "own" computer from the list ?
  
  * since it is an application for browse/mount but the user will want to share too, at the startup show a kind of "do not show again this message", just explaining to the user that if want to share an application (just because is hard to found) needs to click in thunar... bla bla", maybe also say how to do a fast browse (click in the first tab and then in the workgroup thing, then select something and click in mount, tadaaa"
+
+ * users dont' know that leaving the directory mounted will cause problems (when the remote computer is disconnected). Add a message when smb-browser is closed asking to the user if want to umount all the mounted points by smb-browser, explaining that leaving (forgotten) then mounted can cause problems with applications if the computer is not reachable
