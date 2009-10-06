@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.05.2"
+VERSION="1.05.3"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -29,7 +29,7 @@ VERSION="1.05.2"
 ##storing current unames and pw not working at the moment. not added when entered.-- FIXED
 ##added bookmark feature
 import pango
-import  gtk,commands,sys,os,threading,time,gobject,configobj,gettext,subprocess,stat
+import  gtk,sys,os,threading,time,gobject,configobj,gettext,subprocess,stat
 APP = 'smb-browser'
 DIR = '/usr/share/locale/'
 gettext.bindtextdomain(APP, DIR)
@@ -671,7 +671,6 @@ def umount(umntbtn):
 	elif "smbmount" in config[conf]["mount_command"].strip():
 		UMOUNT_CMD=SMBUMOUNT_CMD
 	umntcmd=subprocess.Popen(UMOUNT_CMD+" \'"+unmnt+"\'",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-#	(badd,output)=commands.getstatusoutput(UMOUNT_CMD+" \'"+unmnt+"\'")
 	output=umntcmd.stdout.readlines()
 	umntcmd.stdout.close()
 	errors=umntcmd.stderr.readlines()
@@ -1134,11 +1133,10 @@ def del_bookmark(widget):
 
 def umount_as_root(widget):
 	print "success"
-#	gksucmd=subprocess.Popen("gksu -m \""+_("You have requested to unmount the share with root permissions. Please enter the root password.")+"\" -u root umount "+"\'"+unmnt+"\'",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-#	returncode=gksucmd.wait()
-#	output=''.join(gksucmd.stdout.readlines())
-#	errors=''.join(gksucmd.stderr.readlines())
-	error,output=commands.getstatusoutput("gksu -m \""+_("You have requested to unmount the share with root permissions. Please enter the root password.")+"\" -u root umount "+"\'"+unmnt+"\'")
+	gksucmd=subprocess.Popen("gksu -m \""+_("You have requested to unmount the share with root permissions. Please enter the root password.")+"\" -u root umount "+"\'"+unmnt+"\'",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	returncode=gksucmd.wait()
+	output=''.join(gksucmd.stdout.readlines())
+	errors=''.join(gksucmd.stderr.readlines())
 	if "error" in output:
 			print "ERROR"
 			ERROR(output)
@@ -1320,7 +1318,7 @@ sysbox_bottom.pack_end(vpane, True, True, 0)
 
 main_hpaned.pack1(sysbox_top,True,True)
 main_hpaned.pack2(sysbox_bottom,True,True)
-main_hpaned.set_position(175)
+main_hpaned.set_position(220)
 main_hpaned.set_border_width(5)
 main_box=gtk.VBox(False)
 main_box.pack_start(srchbbox,False,False,0)
@@ -1490,16 +1488,18 @@ helpbox.pack_start(cleantext,True,True,0)
 helpbox.pack_start(clean_content,True,True,0)
 ####End Help Tab#####
 ####Mount Options Tab#####
-mntoptbox=gtk.Fixed()
+mntoptbox=gtk.VBox()
 mntops=gtk.Label(_("Additional mount options")+"\n"+_("see 'man smbmount' for details.")+"\n"+_("(comma separated)"))
 mntops_entry=gtk.Entry()
-mntoptbox.put(mntops,0,300)#pack_start(mntops,False, False, 2)
-mntoptbox.put(mntops_entry,190,300)#pack_start(mntops_entry,False, False, 2)
 mnt_rwro= gtk.combo_box_new_text()
 mnt_rwro.append_text("rw ("+_("Read and Write"))
 mnt_rwro.append_text("ro ("+_("Read Only")+")")
 mnt_rwro.set_active(0)
-mntoptbox.put(mnt_rwro,0,0)#pack_start(mnt_rwro,False, False, 2)
+mntoptbox.pack_start(mnt_rwro,False,False,0)
+mntoptbox.pack_end(mntops_entry,False,False,0)
+mntoptbox.pack_end(mntops,False,False,0)
+mntoptHbox=gtk.HBox()
+mntoptHbox.pack_start(mntoptbox,False,False,0)
 ####End Mount Options Tab#####
 
 mainlbl=gtk.Label(_("Main"))
@@ -1516,7 +1516,7 @@ show_tabs = True
 show_border = True
 notebook.append_page(main_box, mainlbl)
 notebook.append_page(prefbox, conflbl)
-notebook.append_page(mntoptbox, mntoptlbl)
+notebook.append_page(mntoptHbox, mntoptlbl)
 notebook.append_page(helpswindow,helplbl)
 notebook.set_current_page(2)
 
@@ -1524,6 +1524,8 @@ VBOX=gtk.VBox(False)
 VBOX.pack_start(notebook,True,True,1)
 VBOX.pack_start(bbox,False,False,1)
 window.add(VBOX)
+window.set_has_frame(True)
+window.set_frame_dimensions(4,2,4,2)
 window.set_size_request(550, 480)
 
 if os.access("/usr/share/pixmaps/smb-browser.png",0)==True:
