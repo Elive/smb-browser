@@ -59,7 +59,7 @@ conf="conf";hostname='';mntlocal='';userinfo="default";unmnt=''
 info_data=gtk.Label("")
 info_lbl=gtk.Label("\t"+_("Computer Information"))
 host_ip_dict={}
-FIRST_RUN=False;DEPTH1=False;DEPTH2=False;DEPTH3=False;FIND=False;RUN=False;CLEARING=False;SELECTED_BOOKMARK=''
+FINDWGS=False;FIRST_RUN=False;DEPTH1=False;DEPTH2=False;DEPTH3=False;FIND=False;RUN=False;CLEARING=False;SELECTED_BOOKMARK=''
 
 
 ###############
@@ -212,7 +212,7 @@ def clean(clncheckbox):
 def findwgs():
 	global FIND,RUN,timer2
 	if FIND==True:
-		print "Already finding..."
+		print "Already finding...\n\n\n"
 		return
 	print "finding wgs"
 	start_bar2(_("Searching for workgroups"))
@@ -669,7 +669,14 @@ def foldersel(foldbtn):
 		buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
 	response=filew.run()
 	if response ==gtk.RESPONSE_OK:
-		mntlocal_entry.set_text(filew.get_filename())
+		if os.access(filew.get_filename(),os.F_OK):
+			if os.access(filew.get_filename(),os.X_OK) and os.access(filew.get_filename(),os.W_OK) and os.access(filew.get_filename(),os.R_OK):
+				print "RWX ACCESS"
+				mntlocal_entry.set_text(filew.get_filename())
+			else:
+				ERROR(_("You need read/write/execute access in order to use this location"))
+		else:
+			ERROR(_("You need read/write/execute access in order to use this location"))
 	filew.destroy()
 	
 def umount(umntbtn):
@@ -843,7 +850,7 @@ def mount(widget):
 	if os.access(mnt,0)==False:
 		mkdircmd=subprocess.Popen("mkdir -p "+mnt,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		error=mkdircmd.stderr.readlines()
-		if error != []:
+		if mkdircmd.wait() != 0:
 			ERROR(error[0])
 	returncode,output,errors=universal_mount(MOUNT_CMD,"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions)
 	print returncode
@@ -996,7 +1003,19 @@ def addprefsel2(mntedtreeview,x,y):
 def fm(fmbtn):
 	global unmnt
 	fmngr=fm_entry.get_text()
-	if unmnt !='':
+	if len(mntedlist)==0:
+		s = wgtreeview.get_selection()
+		selected_treestore, iter = s.get_selected()
+		if iter:
+			parent=wgtreeview.get_model().iter_parent(iter)
+		else:
+			print "ELSE"
+			return
+		depth=len(s.get_selected_rows()[1][0])
+		if depth==3:
+			mount(fmbtn)
+			subprocess.Popen(fmngr+" "+config[conf]["mntlocal"],shell=True)
+	elif unmnt !='':
 		location=unmnt
 		print fmngr+" \""+location+"\" &"+"1"
 		subprocess.Popen(fmngr+" \""+location+"\"",shell=True)
@@ -1076,7 +1095,7 @@ def delete_event( widget, event=None, data=None):
 			return None,None
 		print response," this is the repsonze"
 
-	if RUN or DEPTH1 or DEPTH2 or DEPTH3==True:
+	if RUN or DEPTH1 or DEPTH2 or DEPTH3:
 		print "killing program"
 		os.kill(os.getpid(),9)
 	gtk.main_quit()
@@ -1369,6 +1388,7 @@ fmlbl=gtk.Label(_("Prefered File Manager"))
 fm_entry=gtk.Entry()
 mntlocallbl=gtk.Label(_("Mount Location"))
 mntlocal_entry=gtk.Entry()
+mntlocal_entry.set_tooltip_text(_("This sets the location where remote shares are mounted on your computer. You must have read/write/execute access to this directory."))
 foldbtn=gtk.Button(_("Browse"))
 foldbtn.connect('clicked', foldersel)
 wgcheckbox=gtk.CheckButton(_("Scan for other workgroups"),False)
@@ -1651,6 +1671,13 @@ add_bookmark_btn.set_sensitive(False)
 readconf1()
 lsmounted()
 load_bookmarks()
+class scan_thread(threading.Thread):#,x,userinfo):
+	def run(self):
+		global userinfo
+		scanwgornb(wgtreestore,userinfo)
+class UD_thread(threading.Thread):
+	def run(self):
+		findwgs()
 if FIRST_RUN==False:
 	if check_for_mnt_cmd(config[conf]["mount_command"].strip()) ==False:
 		if config[conf]["mount_command"].strip() =="smbmount":
@@ -1658,6 +1685,12 @@ if FIRST_RUN==False:
 		else:
 			cmdtotry="smbmount"
 		ERROR(_("It appears that the mount command in your config does not exist, please try:")+" "+cmdtotry)
+	if wgcheckbox.get_active() == True:
+		print "STARTING AUTO SCAN"
+		udt=UD_thread()
+		udt.setDaemon(1)
+		udt.start()	
+
 else:
 	MSG=_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, then try running 'smb-admin' as root or 'smb-usershare' as user. This may require you to install the package 'smb-admin'. You can also try alt-clicking on a folder in 'thunar' and choosing 'Properties' then 'Share'")
 	info_window = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, message_format=MSG)
@@ -1666,13 +1699,10 @@ else:
 	info_window.show_all()
 	response=info_window.run()
 	info_window.destroy()
-class scan_thread(threading.Thread):#,x,userinfo):
-	def run(self):
-		global userinfo
-		scanwgornb(wgtreestore,userinfo)
-class UD_thread(threading.Thread):
-	def run(self):
-		findwgs()
+
+
+
+
 class MAIN(threading.Thread):
 	def __init__(self):
 		gtk.main()

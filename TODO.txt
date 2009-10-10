@@ -2,7 +2,4 @@
 
  * browse button should call hte mount first, if the mountpoint is already not mounted
 	this dosent make sense. How will it know what to mount
- 
- * automatic scanning startup when the first tab is reached :)  (may we need a Stop button there too)
-
  * when i click in "workgroup" i see my other computers but i see the mine too, what do you think about remove the "own" computer from the list ?
