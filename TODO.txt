@@ -1,18 +1,8 @@
-
- * if the dir of the mount location (/home/$USER/mnt) not exist, create it
-
- * in mount options, the "ro" and "rw" words are not intuitive for end-users that may not know it, change it to something like "ro: read only mode" and "rw: read and write mode"
-
- * I read in the "help" that there's a checkbox about "scan" features, instead of that, what about a simple button in the Main tab called "scan the entire network" or something like that ?
-
  * tooltips everywhere that may be needed (preferences tab basically)
 
  * browse button should call hte mount first, if the mountpoint is already not mounted
+	this dosent make sense. How will it know what to mount
  
  * automatic scanning startup when the first tab is reached :)  (may we need a Stop button there too)
 
  * when i click in "workgroup" i see my other computers but i see the mine too, what do you think about remove the "own" computer from the list ?
- 
- * since it is an application for browse/mount but the user will want to share too, at the startup show a kind of "do not show again this message", just explaining to the user that if want to share an application (just because is hard to found) needs to click in thunar... bla bla", maybe also say how to do a fast browse (click in the first tab and then in the workgroup thing, then select something and click in mount, tadaaa"
-
- * users dont' know that leaving the directory mounted will cause problems (when the remote computer is disconnected). Add a message when smb-browser is closed asking to the user if want to umount all the mounted points by smb-browser, explaining that leaving (forgotten) then mounted can cause problems with applications if the computer is not reachable

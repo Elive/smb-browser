@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.05.3"
+VERSION="1.05.4"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -63,32 +63,6 @@ FIRST_RUN=False;DEPTH1=False;DEPTH2=False;DEPTH3=False;FIND=False;RUN=False;CLEA
 
 
 ###############
-def create_default_conf():
-	print "creating default config"
-	tmpwgs=""
-	nmcmd=subprocess.Popen("nmblookup -A localhost",shell=True,stdout=subprocess.PIPE)
-	nm=nmcmd.stdout.readlines()
-	nmcmd.stdout.close()
-	for line in nm:
-		if "<00>" in line:
-			if "<GROUP>" in line:
-				line=line.rstrip()
-				line=line.split()
-				tmpwgs=line[0]
-	if tmpwgs =="":
-		print "starting"
-		smbclcmd=subprocess.Popen("smbclient -NL localhost",shell=True,stdout=subprocess.PIPE)
-		wgl=smbclcmd.stdout.readlines()
-		smbclcmd.stdout.close()
-		if "Connection to localhost failed\n" not in wgl:
-			for item in wgl:
-				if "Workgroup" in item:
-					if "Master" in item:
-						y= wgl[wgl.index(item)+2:len(wgl)]
-						for item in y:
-							name=item.rsplit(" ",1)[0].strip()
-							tmpwgs=name
-	return {'conf': {'version':VERSION, 'username': 'username', 'workgroup': tmpwgs, 'password': 'password', 'filemanager': 'thunar', 'mntlocal': HOME_PATH+"/Network", 'flag': 'True', 'wgflag': 'False', 'clean': 'False', 'first_run': 'True',"mount_command":"smbmount"}}
 def update_config():
 	print "updating configuration"
 	default_config=create_default_conf()
@@ -110,40 +84,7 @@ def import_conf():
 		print "this is the except"
 		config=False
 	return config
-if os.access(configfile,0)==False:
-	print "no configuration file"
-	config=configobj.ConfigObj(create_default_conf())
-	config.filename=configfile
-	config.write()
-else:
-	config=import_conf()
-	print config
-	print config.keys()
-	if config==False:
-		print "import of configuration file failed"
-		config=configobj.ConfigObj(create_default_conf())
-		config.filename=configfile
-		config.write()
-	elif conf in config.keys():
-		print conf+" present"
-		if "version" in config[conf]:
-			file_version=config[conf]["version"]
-			versions=[file_version,VERSION]
-			versions.sort()
-			versions.reverse()
-			if versions[0]==versions[1]:
-				print "versions are =, we need do nothing here"
-			else:
-				print "update 1"
-				update_config()
-		else:
-			print "update 2"
-			update_config()
-	else:
-		print "hi thana"
-		config=configobj.ConfigObj(create_default_conf())
-		config.filename=configfile
-		config.write()		
+	
 
 ###############
 whereiscmd=subprocess.Popen("whereis mount.cifs",shell=True,stdout=subprocess.PIPE)
@@ -184,6 +125,70 @@ print SMBUMOUNT_CMD
 print MOUNT_CIFS_CMD
 print UMOUNT_CIFS_CMD
 username_pw_list={}
+def create_default_conf():
+	print "creating default config"
+	tmpwgs=""
+	nmcmd=subprocess.Popen("nmblookup -A localhost",shell=True,stdout=subprocess.PIPE)
+	nm=nmcmd.stdout.readlines()
+	nmcmd.stdout.close()
+	for line in nm:
+		if "<00>" in line:
+			if "<GROUP>" in line:
+				line=line.rstrip()
+				line=line.split()
+				tmpwgs=line[0]
+	if tmpwgs =="":
+		print "starting"
+		smbclcmd=subprocess.Popen("smbclient -NL localhost",shell=True,stdout=subprocess.PIPE)
+		wgl=smbclcmd.stdout.readlines()
+		smbclcmd.stdout.close()
+		if "Connection to localhost failed\n" not in wgl:
+			for item in wgl:
+				if "Workgroup" in item:
+					if "Master" in item:
+						y= wgl[wgl.index(item)+2:len(wgl)]
+						for item in y:
+							name=item.rsplit(" ",1)[0].strip()
+							tmpwgs=name
+	if SMBMOUNT_CMD==None:
+		cmd=MOUNT_CIFS_CMD
+	else:
+		cmd=SMBMOUNT_CMD
+	return {'conf': {'version':VERSION, 'username': 'username', 'workgroup': tmpwgs, 'password': 'password', 'filemanager': 'thunar', 'mntlocal': HOME_PATH+"/Network", 'flag': 'True', 'wgflag': 'False', 'clean': 'False', 'first_run': 'True',"mount_command":cmd}}
+if os.access(configfile,0)==False:
+	print "no configuration file"
+	config=configobj.ConfigObj(create_default_conf())
+	config.filename=configfile
+	config.write()
+else:
+	config=import_conf()
+	print config
+	print config.keys()
+	if config==False:
+		print "import of configuration file failed"
+		config=configobj.ConfigObj(create_default_conf())
+		config.filename=configfile
+		config.write()
+	elif conf in config.keys():
+		print conf+" present"
+		if "version" in config[conf]:
+			file_version=config[conf]["version"]
+			versions=[file_version,VERSION]
+			versions.sort()
+			versions.reverse()
+			if versions[0]==versions[1]:
+				print "versions are =, we need do nothing here"
+			else:
+				print "update 1"
+				update_config()
+		else:
+			print "update 2"
+			update_config()
+	else:
+		print "hi thana"
+		config=configobj.ConfigObj(create_default_conf())
+		config.filename=configfile
+		config.write()	
 #####parser####
 def is_ip(hostname):
 	IS_IP=True
@@ -476,10 +481,13 @@ def host_processor(hostname,userinfo,iter):
 		if is_ip(hostname)==False:
 			print "IS A NAME"
 			for line in nmbfile:
-	#			print line
+				print line
 				if "<00>" in line:
 					ip_add=line.split()[0]
 					print "IP Address: ",line.split()[0]
+					break
+				elif "name_query failed to find name" in line:
+					ip_add=''
 		else:
 			print "IS AN IP"
 			ip_add=hostname
@@ -1047,6 +1055,27 @@ def userfunc(checkbox):
 		uname_entry.set_sensitive(True)
 def delete_event( widget, event=None, data=None):
 	global RUN,DEPTH1,DEPTH2,DEPTH3
+	if len(mntedlist)>0:
+		MSG=_("You still have remote shares mounted on your system. This could cause certain programs to hang if the remote server shuts down while they are still mounted. Are you sure you want to quit?")
+		info_window = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, message_format=MSG)
+		info_window.add_button(gtk.STOCK_NO,gtk.RESPONSE_NO)
+		info_window.add_button(gtk.STOCK_YES,gtk.RESPONSE_YES)
+		info_window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+		info_window.show_all()
+		response=info_window.run()
+		if response==gtk.RESPONSE_YES:
+			if RUN or DEPTH1 or DEPTH2 or DEPTH3==True:
+				print "killing program"
+				os.kill(os.getpid(),9)
+			gtk.main_quit()
+			return False
+
+		else:
+			info_window.destroy()
+			print "canceled so they can unmount the shares"
+			return None,None
+		print response," this is the repsonze"
+
 	if RUN or DEPTH1 or DEPTH2 or DEPTH3==True:
 		print "killing program"
 		os.kill(os.getpid(),9)
@@ -1133,6 +1162,7 @@ def del_bookmark(widget):
 
 def umount_as_root(widget):
 	print "success"
+	print unmnt
 	gksucmd=subprocess.Popen("gksu -m \""+_("You have requested to unmount the share with root permissions. Please enter the root password.")+"\" -u root umount "+"\'"+unmnt+"\'",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	returncode=gksucmd.wait()
 	output=''.join(gksucmd.stdout.readlines())
@@ -1468,7 +1498,7 @@ insert_tag(searchbuf,_("Search:"),"foreground","blue",12)
 insert_tag(wgbuf,_("Workgroup:"),"foreground","blue",12)
 insert_tag(scan2buf,_("Scan:"),"foreground","blue",12)
 insert_tag(mtlocalbuf,_("Mount Location:"),"foreground","blue",12)
-insert_tag(cleanbuf,_("Clean:"),"foreground","blue",12)
+insert_tag(cleanbuf,_("Clean Directories:"),"foreground","blue",12)
 insert_tag(sharingbuf,_("Sharing Your Files:"),"foreground","blue",12)
 helpbox.pack_start(maintext,False,True,0)
 helpbox.pack_start(scantext,False,True,0)
@@ -1586,20 +1616,6 @@ def readconf1():
 			print "no mount commands available"
 			ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' pacakge"))
 			sys.exit()
-		#~ if check_for_mnt_cmd(config[conf]["mount_command"].strip()) ==False:
-			#~ print "mount command not found"
-			#~ if config[conf]["mount_command"].strip() ==SMBMOUNT_CMD:
-				#~ print "try mount.cifs"
-				#~ cmdtotry=MOUNT_CIFS_CMD
-				#~ #if MOUNT_CIFS_CMD != None:
-				#~ if check_for_mnt_cmd(MOUNT_CIFS_CMD) == False:
-					#~ ERROR(_("Could not find mount.cifs or smbmount"))
-			#~ else:
-				#~ print "try smbmount"
-				#~ cmdtotry=SMBMOUNT_CMD
-				#~ if check_for_mnt_cmd(SMBMOUNT_CMD) == False:
-					#~ ERROR(_("Could not find mount.cifs or smbmount"))
-			#~ config[conf]["mount_command"]=cmdtotry
 		print "first run = ",config[conf]["first_run"]
 		notebook.set_current_page(1)
 		config[conf]["first_run"]=False
@@ -1642,6 +1658,14 @@ if FIRST_RUN==False:
 		else:
 			cmdtotry="smbmount"
 		ERROR(_("It appears that the mount command in your config does not exist, please try:")+" "+cmdtotry)
+else:
+	MSG=_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, then try running 'smb-admin' as root or 'smb-usershare' as user. This may require you to install the package 'smb-admin'. You can also try alt-clicking on a folder in 'thunar' and choosing 'Properties' then 'Share'")
+	info_window = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, message_format=MSG)
+	info_window.add_button(gtk.STOCK_OK,gtk.RESPONSE_OK)
+	info_window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+	info_window.show_all()
+	response=info_window.run()
+	info_window.destroy()
 class scan_thread(threading.Thread):#,x,userinfo):
 	def run(self):
 		global userinfo
