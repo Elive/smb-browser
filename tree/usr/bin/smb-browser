@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.05.6"
+VERSION="1.05.7"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -125,6 +125,11 @@ print SMBUMOUNT_CMD
 print MOUNT_CIFS_CMD
 print UMOUNT_CIFS_CMD
 username_pw_list={}
+def auto_mount(widget,location,tvcol):
+	print "HERE",widget
+	if len(location)==3:
+		mount(mnt)
+		fm(widget)
 def create_default_conf():
 	print "creating default config"
 	tmpwgs=""
@@ -1239,6 +1244,7 @@ wgtreeview = gtk.TreeView(wgtreestore)
 wgtvcolumn = gtk.TreeViewColumn(_("Network"))
 wgtreeview.append_column(wgtvcolumn)
 wgtreeview.connect("cursor-changed",st_scanwgornb,"default")
+wgtreeview.connect("row-activated",auto_mount)
 wgcell = gtk.CellRendererText()
 wgtvcolumn.pack_start(wgcell, True)
 wgtvcolumn.add_attribute(wgcell, 'text', 0)
@@ -1391,20 +1397,25 @@ pw_entry.set_visibility(False)
 pw_entry.set_invisible_char("*") 
 unamelbl=gtk.Label(_("User Name"))
 uname_entry=gtk.Entry()
+
 wglbl=gtk.Label(_("Prefered Workgroups"))
 wg_entry=gtk.Entry()
-wg_entry.set_tooltip_text(_("Use a comma to separate workgroups"))
+wg_entry.set_tooltip_text(_("Here you can specify a list of workgroups to appear by default in the 'Main' tab for browsing. Use a comma to separate workgroups"))
 fmlbl=gtk.Label(_("Prefered File Manager"))
 fm_entry=gtk.Entry()
+fm_entry.set_tooltip_text(_("Enter the command you want to execute when clicking the 'Browse' button on the 'Main' tab."))
 mntlocallbl=gtk.Label(_("Mount Location"))
 mntlocal_entry=gtk.Entry()
 mntlocal_entry.set_tooltip_text(_("This sets the location where remote shares are mounted on your computer. You must have read/write/execute access to this directory."))
 foldbtn=gtk.Button(_("Browse"))
+foldbtn.set_tooltip_text(_("Click to select a folder"))
 foldbtn.connect('clicked', foldersel)
 wgcheckbox=gtk.CheckButton(_("Scan for other workgroups"),False)
+wgcheckbox.set_tooltip_text(_("Checking this will allow you to click the 'Scan for workgroups' button on the 'Main' tab. This will search for workgroups on the network to find onces that you did not specify in the entry above."))
 savebtn=gtk.Button(stock=gtk.STOCK_SAVE)
 savebtn.connect('clicked',save)
 checkbox=gtk.CheckButton(_("Guest"),False)
+checkbox.set_tooltip_text(_("Check this to identify your self as a 'guest' or as 'anonymous' when browsing the network. Some servers will require a username and password to view and or access their shares. If you uncheck this, then you must fill in a username and password."))
 checkbox.connect('clicked', userfunc)
 clncheckbox=gtk.CheckButton(_("Clean directories"))
 clncheckbox.set_tooltip_text(_("This will remove empty directories when unmounting."))
@@ -1414,6 +1425,7 @@ mnt_cmd_cifs.set_tooltip_text(_("This typically requires you to SUID the mount.c
 
 
 mnt_cmd_smb=gtk.RadioButton(mnt_cmd_cifs,"smbmount")
+mnt_cmd_smb.set_tooltip_text(_("This may not be available on all distributions of GNU/Linux"))
 mount_cmd_lbl=gtk.Label(_("Mount command"))
 		####end pref-tab labels entries etc####
 	###preference tab packing####
