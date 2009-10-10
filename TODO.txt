@@ -1,4 +1,1 @@
  * tooltips everywhere that may be needed (preferences tab basically)
-
-  * when i click in "workgroup" i see my other computers but i see the mine too, what do you think about remove the "own" computer from the list ?
-		Denied!
