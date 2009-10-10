@@ -1,1 +1,6 @@
  * tooltips everywhere that may be needed (preferences tab basically)
+
+ * My GF just tried it and I noticed a few things that could be better to have in order to made it more easy:
+   * default tab (at first launch) should be the first one, so, Main
+   * my GF tried to double-click on the "videos" shared dir from my machine and that doesn't has do anything... i have say "mount and then browse", i think that could be nice that double click will do that (equivalent to a mount + browse)
+
