@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.05.4"
+VERSION="1.05.5"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -1030,6 +1030,10 @@ def save(savebtn):
 	conf="conf"
 	pwvar= pw_entry.get_text()
 	unamevar=uname_entry.get_text()
+	if checkbox.get_active()==False:
+		if pwvar=="" or unamevar=="":
+			ERROR(_("Enter a username and password or check the 'Guest' option. Settings will not be saved."))
+			return
 	fmvar=fm_entry.get_text()
 	localvar=mntlocal_entry.get_text()
 	if mnt_cmd_smb.get_active() == True:
@@ -1071,6 +1075,12 @@ def userfunc(checkbox):
 		uname_entry.set_sensitive(False)
 	else:
 		pw_entry.set_sensitive(True)
+		print pw_entry.get_text()
+		if pw_entry.get_text()=="password":
+			print "change"
+			pw_entry.set_text('')
+		if uname_entry.get_text()=="username":
+			uname_entry.set_text('')
 		uname_entry.set_sensitive(True)
 def delete_event( widget, event=None, data=None):
 	global RUN,DEPTH1,DEPTH2,DEPTH3
