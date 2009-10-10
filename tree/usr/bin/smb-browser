@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.05.5"
+VERSION="1.05.6"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -1583,9 +1583,9 @@ notebook.set_current_page(2)
 VBOX=gtk.VBox(False)
 VBOX.pack_start(notebook,True,True,1)
 VBOX.pack_start(bbox,False,False,1)
-window.add(VBOX)
-window.set_has_frame(True)
-window.set_frame_dimensions(4,2,4,2)
+FRAME=gtk.Frame(label=None)
+FRAME.add(VBOX)
+window.add(FRAME)
 window.set_size_request(550, 480)
 
 if os.access("/usr/share/pixmaps/smb-browser.png",0)==True:
