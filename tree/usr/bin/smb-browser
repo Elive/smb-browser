@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.05.7"
+VERSION="1.05.8"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -1242,6 +1242,7 @@ umount_root.show()
 wgtreestore = gtk.TreeStore(str)
 wgtreeview = gtk.TreeView(wgtreestore)
 wgtvcolumn = gtk.TreeViewColumn(_("Network"))
+wgtreeview.set_tooltip_text(_("This list contains the workgroups found on your network, or specified in your preferences. Selected a workgroup to find the hosts/computers which are sharing files then select a share and click the 'Mount' button to access its files."))
 wgtreeview.append_column(wgtvcolumn)
 wgtreeview.connect("cursor-changed",st_scanwgornb,"default")
 wgtreeview.connect("row-activated",auto_mount)
@@ -1274,12 +1275,15 @@ mntedscrolledwindow.add(mntedtreeview)
 
 
 mnt=gtk.Button(_('Mount'))
+mnt.set_tooltip_text(_("Once you have seleceted a share, click this to mount the share on your system. Mounting the shares makes it accessible for you to view, read, and edit etc. the files."))
 add_bookmark_btn=gtk.Button(stock=gtk.STOCK_ADD)
+add_bookmark_btn.set_tooltip_text(_("Choose a share in the list of mounted shares to bookmark, click the button and it will be added to the 'Bookmakrs' section above. Next time all you have to do is choose it from the list to mount it"))
 add_bookmark_btn.get_children()[0].get_children()[0].get_children()[1].set_label(_("BookMark"))
 add_bookmark_btn.connect("clicked",add_bookmark)
 #mnt.connect('clicked', mount,"NONE")
 mnt.connect('clicked', mount)
 umntbtn=gtk.Button(_('Un-Mount'))
+umntbtn.set_tooltip_text(_("This unmounts or disconnects the share from your system. It is best to do this when you are done accessing the files."))
 umntbtn.connect('clicked', umount)
 quit=gtk.Button(label=None,stock=gtk.STOCK_QUIT)#'Quit')
 quit.connect('clicked', delete_event)
@@ -1310,8 +1314,10 @@ scanbtn=gtk.Button(_('Scan for workgroups'))
 scanbtn.set_tooltip_text(_("To enable this, check the 'Scan for other workgroups' option in the preferences"))
 scanbtn.connect('clicked', st_func)
 fmbtn=gtk.Button(_("Browse"))
+fmbtn.set_tooltip_text(_("Click to launch your defined filemanger and browse the mounted shares."))
 fmbtn.connect('clicked', fm)
 srchbtn=gtk.Button(_("Search by Host Name or IP"))
+srchbtn.set_tooltip_text(_("Enter the name of a computer or its IP address in the box to the left, then click to try and find it on the network."))
 srchbtn.connect('clicked', search,"default")
 
 bookmark_menu=gtk.MenuItem(_("Bookmarks"))
@@ -1320,7 +1326,7 @@ def menuitem_response(widget,buf):
 	print buf
 
 bookmark_menu.set_submenu(list_menu)
-bookmark_menu.set_tooltip_text(_("Right click on a bookmark to delete it."))
+bookmark_menu.set_tooltip_text(_("Choose a bookmarked share to mount. You can bookmark shares with the button below. You can right click on a bookmark to delete it."))
 
 menu_bar = gtk.MenuBar()
 menu_bar.append (bookmark_menu)
