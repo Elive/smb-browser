@@ -2,3 +2,9 @@
    * default tab (at first launch) should be the first one, so, Main
 
  * <Thanatermesis> can you add a checkbox to this message in order to "Do not show this message again" ?   normally users just click in "ok" when there's a message, without read it, so when they will really to read it, then is not there anymore lol
+
+ * [BUG] (or supposed to be), Today i have shared my "Videos" dir sucessfully and my GF used it the entire day without problems, after a reboot of the server machine i have see that my Videos share is not saved in the server, the cause aparently was that my Videos thing is not a dir but a symlink to a dir, this is the message from smb-usershare (note: ignore the first info_fn line, just see the second one):
+      [asdf ~]$ smb-usershare 
+      info_fn: file /var/lib/samba/usershares/videos is not a well formed usershare file.
+      info_fn: Error was Path is not a directory.
+
