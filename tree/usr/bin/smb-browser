@@ -1522,7 +1522,7 @@ wg_content_buf.set_text("\t"+_("Here you should specify the Workgroup or Workgro
 scan2_content_buf.set_text("\t"+_("See above."))
 mtlocal_content_buf.set_text("\t"+_("This is the location of where the Samba shares will be mounted on your computer. You must have write permissions for this directory."))
 clean_content_buf.set_text("\t"+_("If this is checked, then Smb-browser will remove the directories created when mounting shares. If it finds a file in one of the directories it will not remove it"))
-sharing_content_buf.set_text("\t"+_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, then try running 'smb-admin' as root or 'smb-usershare' as user. This may require you to install the package 'smb-admin'. You can also try alt-clicking on a folder in 'thunar' and choosing 'Properties' then 'Share'"))
+sharing_content_buf.set_text("\t"+_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, from thunar select a directory to share and right click to it, then select the option 'Share'. If you want to manage your Shared configurations or set advanced options run 'Samba Admin', you can found it on your menus"))
 
 for x in [maincontent,maincontent2,prefcontent,maintext,preftext,scantext,searchtext,wgtext,sharingtext,sharing_content,scantext2, mtlocaltext, cleantext,scan2_content,wg_content,mtlocal_content,clean_content]:
 	x.set_wrap_mode(gtk.WRAP_WORD)
