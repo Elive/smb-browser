@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name = "smb-browser",
-	version = "1.05.8",
+	version = "1.05.9",
 	description = "This program was designed to assist users in finding and mounting samba shared folders on a network while being easy yet functional",
 	author = "David Braker",
 	author_email = "linuxnit@elivecd.org",

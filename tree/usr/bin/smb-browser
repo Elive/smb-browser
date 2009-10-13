@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.05.8"
+VERSION="1.05.9"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -60,7 +60,7 @@ info_data=gtk.Label("")
 info_lbl=gtk.Label("\t"+_("Computer Information"))
 host_ip_dict={}
 FINDWGS=False;FIRST_RUN=False;DEPTH1=False;DEPTH2=False;DEPTH3=False;FIND=False;RUN=False;CLEARING=False;SELECTED_BOOKMARK=''
-
+CREATING_CONF=False
 
 ###############
 def update_config():
@@ -131,6 +131,8 @@ def auto_mount(widget,location,tvcol):
 		mount(mnt)
 		fm(widget)
 def create_default_conf():
+	global CREATING_CONF
+	CREATING_CONF=True
 	print "creating default config"
 	tmpwgs=""
 	nmcmd=subprocess.Popen("nmblookup -A localhost",shell=True,stdout=subprocess.PIPE)
@@ -159,41 +161,47 @@ def create_default_conf():
 		cmd=MOUNT_CIFS_CMD
 	else:
 		cmd=SMBMOUNT_CMD
-	return {'conf': {'version':VERSION, 'username': 'username', 'workgroup': tmpwgs, 'password': 'password', 'filemanager': 'thunar', 'mntlocal': HOME_PATH+"/Network", 'flag': 'True', 'wgflag': 'False', 'clean': 'False', 'first_run': 'True',"mount_command":cmd}}
-if os.access(configfile,0)==False:
-	print "no configuration file"
-	config=configobj.ConfigObj(create_default_conf())
-	config.filename=configfile
-	config.write()
-else:
-	config=import_conf()
-	print config
-	print config.keys()
-	if config==False:
-		print "import of configuration file failed"
-		config=configobj.ConfigObj(create_default_conf())
-		config.filename=configfile
-		config.write()
-	elif conf in config.keys():
-		print conf+" present"
-		if "version" in config[conf]:
-			file_version=config[conf]["version"]
-			versions=[file_version,VERSION]
-			versions.sort()
-			versions.reverse()
-			if versions[0]==versions[1]:
-				print "versions are =, we need do nothing here"
-			else:
-				print "update 1"
-				update_config()
+	CREATING_CONF=False
+	return {'conf': {'version':VERSION, 'username': 'username', 'workgroup': tmpwgs, 'password': 'password', 'filemanager': 'thunar', 'mntlocal': HOME_PATH+"/Network", 'flag': 'True', 'wgflag': 'False', 'clean': 'False', 'first_run': 'True',"mount_command":cmd,"show_start_msg":True}}
+class check_conf_thread(threading.Thread):
+	def run(self):
+		global config
+		if os.access(configfile,0)==False:
+			print "no configuration file"
+			config=configobj.ConfigObj(create_default_conf())
+			config.filename=configfile
+			config.write()
 		else:
-			print "update 2"
-			update_config()
-	else:
-		print "hi thana"
-		config=configobj.ConfigObj(create_default_conf())
-		config.filename=configfile
-		config.write()	
+			config=import_conf()
+			print config
+			print config.keys()
+			if config==False:
+				print "import of configuration file failed"
+				config=configobj.ConfigObj(create_default_conf())
+				config.filename=configfile
+				config.write()
+			elif conf in config.keys():
+				print conf+" present"
+				if "version" in config[conf]:
+					file_version=config[conf]["version"]
+					versions=[file_version,VERSION]
+					versions.sort()
+					versions.reverse()
+					if versions[0]==versions[1]:
+						print "versions are =, we need do nothing here"
+					else:
+						print "update 1"
+						update_config()
+				else:
+					print "update 2"
+					update_config()
+			else:
+				config=configobj.ConfigObj(create_default_conf())
+				config.filename=configfile
+				config.write()
+ch_cf=check_conf_thread()
+ch_cf.setDaemon(1)
+ch_cf.start()
 #####parser####
 def is_ip(hostname):
 	IS_IP=True
@@ -1522,7 +1530,7 @@ wg_content_buf.set_text("\t"+_("Here you should specify the Workgroup or Workgro
 scan2_content_buf.set_text("\t"+_("See above."))
 mtlocal_content_buf.set_text("\t"+_("This is the location of where the Samba shares will be mounted on your computer. You must have write permissions for this directory."))
 clean_content_buf.set_text("\t"+_("If this is checked, then Smb-browser will remove the directories created when mounting shares. If it finds a file in one of the directories it will not remove it"))
-sharing_content_buf.set_text("\t"+_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, from thunar select a directory to share and right click to it, then select the option 'Share'. If you want to manage your Shared configurations or set advanced options run 'Samba Admin', you can found it on your menus"))
+sharing_content_buf.set_text("\t"+_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, from thunar select a directory to share and right click to it, then select the option 'Share'. If you want to manage your Shared configurations or set advanced options run 'Samba Admin', you can find it on your menus."))
 
 for x in [maincontent,maincontent2,prefcontent,maintext,preftext,scantext,searchtext,wgtext,sharingtext,sharing_content,scantext2, mtlocaltext, cleantext,scan2_content,wg_content,mtlocal_content,clean_content]:
 	x.set_wrap_mode(gtk.WRAP_WORD)
@@ -1608,7 +1616,7 @@ window.set_size_request(550, 480)
 
 if os.access("/usr/share/pixmaps/smb-browser.png",0)==True:
 	window.set_icon_from_file("/usr/share/pixmaps/smb-browser.png")
-window.show_all()
+#window.show_all()
 
 
 def readconf():
@@ -1696,9 +1704,8 @@ def readconf1():
 mnt.set_sensitive(False)
 umntbtn.set_sensitive(False)
 add_bookmark_btn.set_sensitive(False)
-readconf1()
-lsmounted()
-load_bookmarks()
+#~ def show_startup_msg():
+
 class scan_thread(threading.Thread):#,x,userinfo):
 	def run(self):
 		global userinfo
@@ -1706,33 +1713,66 @@ class scan_thread(threading.Thread):#,x,userinfo):
 class UD_thread(threading.Thread):
 	def run(self):
 		findwgs()
-if FIRST_RUN==False:
-	if check_for_mnt_cmd(config[conf]["mount_command"].strip()) ==False:
-		if config[conf]["mount_command"].strip() =="smbmount":
-			cmdtotry="mount.cifs"
-		else:
-			cmdtotry="smbmount"
-		ERROR(_("It appears that the mount command in your config does not exist, please try:")+" "+cmdtotry)
-	if wgcheckbox.get_active() == True:
-		print "STARTING AUTO SCAN"
-		udt=UD_thread()
-		udt.setDaemon(1)
-		udt.start()	
-
-else:
-	MSG=_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, then try running 'smb-admin' as root or 'smb-usershare' as user. This may require you to install the package 'smb-admin'. You can also try alt-clicking on a folder in 'thunar' and choosing 'Properties' then 'Share'")
-	info_window = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, message_format=MSG)
-	info_window.add_button(gtk.STOCK_OK,gtk.RESPONSE_OK)
-	info_window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
-	info_window.show_all()
-	response=info_window.run()
-	info_window.destroy()
-
-
-
+class startup_thread(threading.Thread):
+	def run(self):
+		global FIRST_RUN,config,CREATING_CONF
+		killupdatewin=False
+		if CREATING_CONF==True:
+			print "Waiting for confguration update to finish..."
+			gtk.gdk.threads_enter()
+			killupdatewin=True
+			if CREATING_CONF==True:
+				MSG=_("Updating Smb-Browser configurations, Please wait...")
+				update_window = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, message_format=MSG)
+				update_window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+				update_window.set_title(_("Smb-Browser Update")+"...")
+				update_window.show_all()
+			gtk.gdk.threads_leave()
+		while CREATING_CONF==True:
+			time.sleep(.5)
+		if  killupdatewin==True:
+			update_window.destroy()
+		window.show_all()
+		if FIRST_RUN==False:
+			time.sleep(.2)
+			if check_for_mnt_cmd(config[conf]["mount_command"].strip()) ==False:
+				if config[conf]["mount_command"].strip() =="smbmount":
+					cmdtotry="mount.cifs"
+				else:
+					cmdtotry="smbmount"
+				gtk.gdk.threads_enter()
+				ERROR(_("It appears that the mount command in your config does not exist, please try:")+" "+cmdtotry)
+				gtk.gdk.threads_leave()
+		if wgcheckbox.get_active() == True:
+			print "STARTING AUTO SCAN"
+			udt=UD_thread()
+			udt.setDaemon(1)
+			udt.start()	
+		readconf1()
+		lsmounted()
+		load_bookmarks()
+		if config[conf]["show_start_msg"] in [True,"True","true"]:
+			gtk.gdk.threads_enter()
+			MSG=_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, then try running 'smb-admin' as root or 'smb-usershare' as user. This may require you to install the package 'smb-admin'. You can also try alt-clicking on a folder in 'thunar' and choosing 'Properties' then 'Share'")
+			start_window = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, message_format=MSG)
+			start_window.add_button(_("Do not remind me."),3)
+			start_window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+			start_window.add_button(gtk.STOCK_OK,gtk.RESPONSE_OK)
+			start_window.show_all()
+			response=start_window.run()
+			if response==3:
+				config[conf]["show_start_msg"]=False
+				config.write()
+			start_window.destroy()
+			gtk.gdk.threads_leave()
+startup=startup_thread()
+startup.setDaemon(1)
+startup.start()
 
 class MAIN(threading.Thread):
 	def __init__(self):
 		gtk.main()
 
+
+		
 main=MAIN()
