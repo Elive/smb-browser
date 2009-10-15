@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.06"
+VERSION="1.06.1"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -952,8 +952,6 @@ def mount(widget):
 			user_options="sec=none,user=guest"
 		else:
 			user_options="username="+uname_entry.get_text()+"%"+pw_entry.get_text()
-		print addoptions
-		print user_options
 	###the server/share names and mount location have been set above, now we get all the options other than uname and pw
 	addoptions=''
 	print user_options
@@ -1404,7 +1402,8 @@ mntedscrolledwindow.set_policy(True, True)
 mntedscrolledwindow.add(mntedtreeview)
 
 
-mnt=gtk.Button(_('Mount'))
+mnt=gtk.Button(stock=gtk.STOCK_CONNECT)
+mnt.get_children()[0].get_children()[0].get_children()[1].set_label(_('Mount'))
 mnt.set_tooltip_text(_("Once you have seleceted a share, click this to mount the share on your system. Mounting the shares makes it accessible for you to view, read, and edit etc. the files."))
 add_bookmark_btn=gtk.Button(stock=gtk.STOCK_ADD)
 add_bookmark_btn.set_tooltip_text(_("Choose a share in the list of mounted shares to bookmark, click the button and it will be added to the 'Bookmarks' section above. Next time all you have to do is choose it from the list to mount it"))
@@ -1412,7 +1411,8 @@ add_bookmark_btn.get_children()[0].get_children()[0].get_children()[1].set_label
 add_bookmark_btn.connect("clicked",add_bookmark)
 #mnt.connect('clicked', mount,"NONE")
 mnt.connect('clicked', mount)
-umntbtn=gtk.Button(_('Un-Mount'))
+umntbtn=gtk.Button(stock=gtk.STOCK_DISCONNECT)
+umntbtn.get_children()[0].get_children()[0].get_children()[1].set_label(_('Un-Mount'))
 umntbtn.set_tooltip_text(_("This unmounts or disconnects the share from your system. It is best to do this when you are done accessing the files."))
 umntbtn.connect('clicked', umount)
 quit=gtk.Button(label=None,stock=gtk.STOCK_QUIT)#'Quit')
@@ -1440,13 +1440,16 @@ def abtfunc(x):
 	x.set_comments(_("This program was designed to assist users in finding and mounting samba shared folders on a network while being easy yet functional."))
 	x.show()
 about.connect("clicked",abtfunc)
-scanbtn=gtk.Button(_('Scan for workgroups'))
+scanbtn=gtk.Button(stock=gtk.STOCK_FIND)
+scanbtn.get_children()[0].get_children()[0].get_children()[1].set_label(_('Scan for workgroups'))
 scanbtn.set_tooltip_text(_("To enable this, check the 'Scan for other workgroups' option in the preferences"))
 scanbtn.connect('clicked', st_func)
-fmbtn=gtk.Button(_("Browse"))
+fmbtn=gtk.Button(stock=gtk.STOCK_OPEN)
+fmbtn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Browse"))
 fmbtn.set_tooltip_text(_("Click to launch your defined filemanger and browse the mounted shares."))
 fmbtn.connect('clicked', fm)
-srchbtn=gtk.Button(_("Search by Host Name or IP"))
+srchbtn=gtk.Button(stock=gtk.STOCK_FIND)
+srchbtn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Search by Host Name or IP"))
 srchbtn.set_tooltip_text(_("Enter the name of a computer or its IP address in the box to the left, then click to try and find it on the network."))
 srchbtn.connect('clicked', search,"default")
 
@@ -1463,7 +1466,8 @@ menu_bar.append (bookmark_menu)
 
 srch_entry=gtk.Entry()
 srch_entry.connect("activate",search,"default")
-manual_mnt_btn=gtk.Button(_("Manual Mount"))
+manual_mnt_btn=gtk.Button(stock=gtk.STOCK_CONNECT)
+manual_mnt_btn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Manual Mount"))
 manual_mnt_btn.set_tooltip_text(_("Click here to manually enter the server and share that you would like to mount. This is helpful on servers that have hidden shares."))
 manual_mnt_btn.connect("clicked",manual_mnt)
 
@@ -1739,7 +1743,7 @@ VBOX.pack_start(bbox,False,False,1)
 FRAME=gtk.Frame(label=None)
 FRAME.add(VBOX)
 window.add(FRAME)
-window.set_size_request(550, 480)
+window.set_size_request(580, 480)
 
 if os.access("/usr/share/pixmaps/smb-browser.png",0)==True:
 	window.set_icon_from_file("/usr/share/pixmaps/smb-browser.png")
