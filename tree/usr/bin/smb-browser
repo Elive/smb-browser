@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.05.9"
+VERSION="1.06"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -580,7 +580,7 @@ def host_processor(hostname,userinfo,iter):
 		gtk.gdk.threads_leave()
 #		time.sleep(2)
 	if shares==[]:
-		MSG=_("No shares were found. Please check that")+" "+hostname+" "+_("is sharing files. You may need to supply a username and password to find the shares.")
+		MSG=_("No shares were found. Please check that")+" "+hostname+" "+_("is sharing files. You may need to supply a username and password to find the shares. You can also try manually entering the information. To do so, click the 'Manual mount' button in the top right section of the 'Main' tab.")
 		get_from_user=True
 #	fh2.close()
 	if get_from_user==True:
@@ -722,9 +722,13 @@ def get_uname_pw(nothing,MSG,hostname):
 	print "Getting uname and pw from user"
 	info_window = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, message_format=MSG)
 	info_window.add_button(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL)
-	info_window.add_button(gtk.STOCK_OK,gtk.RESPONSE_OK)
+	df_btn=info_window.add_button(gtk.STOCK_OK,gtk.RESPONSE_OK)
+	print df_btn
+	df_btn.set_flags(gtk.CAN_DEFAULT)
 	uname=gtk.Entry()
 	passwd=gtk.Entry()
+	passwd.set_activates_default(True)
+	info_window.set_default(df_btn)
 	passwd.set_visibility(False)
 	passwd.set_invisible_char("*") 
 	UNAME_label=gtk.Label(_("Username:"))
@@ -785,8 +789,104 @@ def universal_mount(mntcmd,options):
 	mntshare.stderr.close()
 	returncode=mntshare.wait()
 	return returncode,output,errors
+def manual_mnt(widget):
+	def endit(widget):
+		man_mnt_win.destroy()
+	def toggle_user(widget):
+		if widget.get_active()==True:
+			manuname_ent.set_text("")
+			pass_ent.set_text("")
+			pass_ent.set_sensitive(False)
+			manuname_ent.set_sensitive(False)
+		else:
+			pass_ent.set_sensitive(True)
+			manuname_ent.set_sensitive(True)
+	def mntit(widget):
+		server=server_ent.get_text().strip()
+		share=share_ent.get_text().strip()
+		ip_add=''
+		print is_ip(server)
+		if is_ip(server)==False:
+			print server+" IS A NAME"
+			nmbLcmd=subprocess.Popen("nmblookup "+server,shell=True,stdout=subprocess.PIPE)
+			nmbfile=nmbLcmd.stdout.readlines()
+			nmbLcmd.stdout.close()
+			for line in nmbfile:
+				print line
+				if "<00>" in line:
+					ip_add=line.split()[0]
+					print "IP Address: ",line.split()[0]
+					break
+				elif "name_query failed to find name" in line:
+					ip_add=''
+		else:
+			print server+" IS AN IP"
+			ip_add=server
+		if asguest_cb.get_active() ==True:
+			user_options="sec=none,user=guest"
+		else:
+			if manuname_ent.get_text().strip()=="" or pass_ent.get_text().strip()=='':
+				return ERROR(_("Please Enter a user name and password or select the guest option."))
+			user_options="username="+manuname_ent.get_text()+"%"+pass_ent.get_text()
+		if ip_add=='' and is_ip(server)==False:
+			ERROR(_("The server you entered does not appear to be an ip address and we are not able to locate an ip address for that name."))
+		else:
+			print server,share,ip_add,user_options
+			mount([server,share,ip_add,user_options])
+		man_mnt_win.destroy()
+	man_mnt_win=gtk.Window()
+	man_about_lbl=gtk.Label(_("Enter the following information to manually mount a share:"))
+	server_lbl=gtk.Label(_("Server:"))
+	server_ent=gtk.Entry()
+	share_lbl=gtk.Label(_("Share:"))
+	share_ent=gtk.Entry()
+	share_ent.set_activates_default(True)
+	asguest_cb=gtk.CheckButton(label=_("Mount as guest / anonymous"))
+	asguest_cb.connect('clicked',toggle_user)
+	manuname_lbl=gtk.Label(_("User Name:"))
+	manuname_ent=gtk.Entry()
+	pass_lbl=gtk.Label(_("Password:"))
+	pass_ent=gtk.Entry()
+	pass_ent.set_visibility(False)
+	pass_ent.set_invisible_char("*")
+	pass_ent.set_activates_default(True)
+	man_ok_btn=gtk.Button(stock=gtk.STOCK_OK)
+	man_ok_btn.set_flags(gtk.CAN_DEFAULT)
+	man_ok_btn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Mount"))
+	man_ok_btn.connect("clicked",mntit)
+	man_can_btn=gtk.Button(stock=gtk.STOCK_CANCEL)
+	man_can_btn.connect("clicked",endit)
+	man_hbox=gtk.HBox()
+	man_vbox1=gtk.VButtonBox()
+	man_vbox2=gtk.VButtonBox()
+	man_vbox1.pack_start(server_lbl,False,False,2)
+	man_vbox1.pack_start(share_lbl,False,False,2)
+	man_vbox1.pack_start(manuname_lbl,False,False,2)
+	man_vbox1.pack_start(pass_lbl,False,False,2)
+	man_vbox2.pack_start(server_ent,False,False,2)
+	man_vbox2.pack_start(share_ent,False,False,2)
+	man_vbox2.pack_start(manuname_ent,False,False,2)
+	man_vbox2.pack_start(pass_ent,False,False,2)
+	man_hbox.pack_start(man_vbox1,True,True,1)
+	man_hbox.pack_start(man_vbox2,False,True,1)
+	man_main_vbox=gtk.VBox()
+	man_bb=gtk.HButtonBox()
+	man_bb.pack_start(man_can_btn)
+	man_bb.pack_start(man_ok_btn)
+	man_main_vbox.pack_start(man_about_lbl,False,True,2)
+	man_main_vbox.pack_start(man_hbox,False,True,2)
+	man_main_vbox.pack_start(asguest_cb,False,True,2)
+	man_main_vbox.pack_start(man_bb,False,True,2)
+	man_frame=gtk.Frame(label=None)
+	man_frame.add(man_main_vbox)
+	man_mnt_win.add(man_frame)
+	man_mnt_win.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+	man_mnt_win.set_default(man_ok_btn)
+	man_mnt_win.show_all()
+	
 def mount(widget):
 	print "######### starting mount#################"
+	print type(widget)
 	global ip_add,CLEARING,SELECTED_BOOKMARK
 	MOUNT_CMD=config[conf]["mount_command"]
 	if MOUNT_CMD=="NONE":
@@ -834,8 +934,30 @@ def mount(widget):
 		print SELECTED_BOOMARK
 		sharemnt="\'"+config["bookmarks"][key]["share_name"]+"\'"
 		mnt="\'"+config["bookmarks"][key]["mount_location"]+"\'"
+	if type(widget)==list:
+		print "manual mount time"
+		hostname=widget[0]
+		sharename=widget[1]
+		ip_add=widget[2]
+		user_options=widget[3]
+		sharemnt="\'//"+hostname+"/"+sharename+"\'"
+		mnt="\'"+mntlocal+ hostname+"/"+sharename+"\'"
+		print sharemnt
+		print mnt
+		print ip_add
+		print user_options
+#		return
+	else:
+		if checkbox.get_active() ==True:
+			user_options="sec=none,user=guest"
+		else:
+			user_options="username="+uname_entry.get_text()+"%"+pw_entry.get_text()
+		print addoptions
+		print user_options
 	###the server/share names and mount location have been set above, now we get all the options other than uname and pw
 	addoptions=''
+	print user_options
+	#return
 	MN=mntops_entry.get_text().strip(",")
 	if MN  !="":
 		addoptions=addoptions+","+MN
@@ -846,12 +968,7 @@ def mount(widget):
 	print addoptions+"this is add options"
 	addoptions=addoptions+"ip="+ip_add
 	#############end additional options#########
-	if checkbox.get_active() ==True:
-		user_options="sec=none,user=guest"
-	else:
-		user_options="username="+uname_entry.get_text()+"%"+pw_entry.get_text()
-	print addoptions
-	print user_options
+
 	###start the mounting process
 	###first try by settings
 	print sharemnt
@@ -892,6 +1009,8 @@ def mount(widget):
 					return lsmounted()
 			else:
 				return mount_by_user_input(addoptions," "+_("Access Denied! Please enter your:"),sharemnt,mnt)
+		else:
+			return ERROR(output)
 	else:
 		#~ bookmarks_cmb.set_active(0)
 		progbar.set_text(_("Done mounting")+" "+sharemnt)
@@ -1288,7 +1407,7 @@ mntedscrolledwindow.add(mntedtreeview)
 mnt=gtk.Button(_('Mount'))
 mnt.set_tooltip_text(_("Once you have seleceted a share, click this to mount the share on your system. Mounting the shares makes it accessible for you to view, read, and edit etc. the files."))
 add_bookmark_btn=gtk.Button(stock=gtk.STOCK_ADD)
-add_bookmark_btn.set_tooltip_text(_("Choose a share in the list of mounted shares to bookmark, click the button and it will be added to the 'Bookmakrs' section above. Next time all you have to do is choose it from the list to mount it"))
+add_bookmark_btn.set_tooltip_text(_("Choose a share in the list of mounted shares to bookmark, click the button and it will be added to the 'Bookmarks' section above. Next time all you have to do is choose it from the list to mount it"))
 add_bookmark_btn.get_children()[0].get_children()[0].get_children()[1].set_label(_("BookMark"))
 add_bookmark_btn.connect("clicked",add_bookmark)
 #mnt.connect('clicked', mount,"NONE")
@@ -1344,6 +1463,10 @@ menu_bar.append (bookmark_menu)
 
 srch_entry=gtk.Entry()
 srch_entry.connect("activate",search,"default")
+manual_mnt_btn=gtk.Button(_("Manual Mount"))
+manual_mnt_btn.set_tooltip_text(_("Click here to manually enter the server and share that you would like to mount. This is helpful on servers that have hidden shares."))
+manual_mnt_btn.connect("clicked",manual_mnt)
+
 statuslbl=gtk.Label()
 statuslbl.set_justify(gtk.JUSTIFY_LEFT)
 
@@ -1354,6 +1477,7 @@ mntbox.pack_end(mnt, False, True, 0)
 srchbbox=gtk.HBox(False, 5)
 srchbbox.pack_start(srch_entry, False, False, 0)
 srchbbox.pack_start(srchbtn, False, True, 0)
+srchbbox.pack_start(manual_mnt_btn, False, True, 0)
 srchbbox.pack_start(menu_bar, False, True, 0)
 progbar = gtk.ProgressBar()
 scan_progbar=gtk.ProgressBar()
