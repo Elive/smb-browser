@@ -71,4 +71,4 @@ Icon=emblem-people
 Terminal=false
 MultipleArgs=false
 Type=Application
-Categories=Application;Network
+Categories=Application;Network;FileManager
