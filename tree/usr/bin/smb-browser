@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.06.1"
+VERSION="1.06.2"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -165,7 +165,7 @@ def create_default_conf():
 	else:
 		cmd=SMBMOUNT_CMD
 	CREATING_CONF=False
-	return {'conf': {'version':VERSION, 'username': 'username', 'workgroup': tmpwgs, 'password': 'password', 'filemanager': 'thunar', 'mntlocal': HOME_PATH+"/Network", 'flag': 'True', 'wgflag': 'False', 'clean': 'False', 'first_run': 'True',"mount_command":cmd,"show_start_msg":True}}
+	return {'conf': {'version':VERSION, 'username': 'username', 'workgroup': tmpwgs, 'password': 'password', 'filemanager': 'thunar', 'mntlocal': HOME_PATH+"/Network", 'flag': 'True', 'wgflag': 'False', 'clean': 'False', 'first_run': 'True',"mount_command":cmd,"show_start_msg":True,"tray_on_close":True}}
 class check_conf_thread(threading.Thread):
 	def run(self):
 		global config
@@ -489,6 +489,7 @@ def host_processor(hostname,userinfo,iter):
 	if hostname in host_ip_dict.keys():
 		print host_ip_dict[hostname]
 		hostname1=host_ip_dict[hostname]
+		ip_add=host_ip_dict[hostname]
 	else:
 		nmbLcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
 		nmbfile=nmbLcmd.stdout.readlines()
@@ -639,12 +640,14 @@ def scanwgornb(wgtreeviewx,userinfo):
 		parent_iter = wgtreestore.iter_parent(iter)
 		grand_parent_iter = wgtreestore.iter_parent(parent_iter)
 		grand_parent=wgtreestore.get_value(grand_parent_iter,0)
-		if grand_parent=="Search Results":
-			ip_add=wgtreestore.get_value(parent_iter,0)
+#		print grand_parent,"GRAND PARENT"
+#		if grand_parent=="Search Results":
+		ip_add=wgtreestore.get_value(parent_iter,0)
+		print ip_add,"ip ADDRESS"
 		DEPTH3=False
 		set_pc_info(itemclicked)
 def set_pc_info(hostname):
-	global ip_add
+	global ip_add,host_ip_dict
 	print host_ip_dict.keys(),"dict"
 	if hostname in host_ip_dict.keys():
 		print "depth did not = 1 and thus we are populating the host information"
@@ -652,13 +655,14 @@ def set_pc_info(hostname):
 		ip_add=host_ip_dict[hostname]
 		info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host name: ")+hostname+"\n"+_("IP Address: ")+ip_add)
 	else:
+		print "else statement in set_pc_info()"
 		nmbcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
 		nmbfile=nmbcmd.stdout.readlines()
 		nmbcmd.stdout.close()
 		print "2"
 		if is_ip(hostname)==False:
 			for line in nmbfile:
-	#			print line
+				print line
 				if "<00>" in line:
 					ip_add=line.split()[0]
 					print "IP Address: ",line.split()[0]
@@ -1016,7 +1020,7 @@ def mount(widget):
 
 
 def search(srchbtn,userinfo):
-	global ip_add
+	global ip_add,host_ip_dict
 	print "this is activated when you click the search by name or ip button"
 	hostname=srch_entry.get_text().upper().strip()
 	if hostname.strip()=="":
@@ -1076,6 +1080,8 @@ def search(srchbtn,userinfo):
 #		print pcname.strip("\"").strip("'"),"<<<<<<<<<<<<<<<<<<<<"
 		if pcname.strip("\"'").strip("'\"")=="":
 			pcname=hostip
+		##at this point we should have a pcname and hostip so we need to add them to the list
+		host_ip_dict[pcname]=hostip
 		n=1
 		ITER=wgtreestore.iter_nth_child(None, 0)
 		FOUND=False
@@ -1102,7 +1108,7 @@ def search(srchbtn,userinfo):
 		if PC_PRESENT == False:
 			wgtreestore.append(ITER, [pcname])
 			wgtreeview.expand_row(wgtreestore.get_path(ITER),True)
-def lsmounted():
+def get_mounted():
 	lshare=[]
 	lsmntcmd=subprocess.Popen("mount",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	output=lsmntcmd.stdout.readlines()
@@ -1115,6 +1121,9 @@ def lsmounted():
 			item3=item.rstrip()
 			print item3
 			lshare.append(item3[item3.index(" on ")+4:item3.index(" type cifs")])
+	return lshare
+def lsmounted():
+	lshare=get_mounted()
 	mntedlist.clear()
 	z=0	
 	for item in lshare:	
@@ -1160,6 +1169,7 @@ def save(savebtn):
 	y=checkbox.get_active()
 	x=wgcheckbox.get_active()
 	z=clncheckbox.get_active()
+	tr=to_systray.get_active()
 	conf="conf"
 	pwvar= pw_entry.get_text()
 	unamevar=uname_entry.get_text()
@@ -1195,9 +1205,10 @@ def save(savebtn):
 	config[conf]["flag"]=y
 	config[conf]["wgflag"]=x
 	config[conf]["clean"]=z
+	config[conf]["tray_on_close"]=tr
 	config[conf]["mount_command"]=mnt_cmd
 	config.write()
-	readconf()
+	readconf("save")
 
 
 def userfunc(checkbox):
@@ -1217,6 +1228,11 @@ def userfunc(checkbox):
 		uname_entry.set_sensitive(True)
 def delete_event( widget, event=None, data=None):
 	global RUN,DEPTH1,DEPTH2,DEPTH3
+	print widget,"this is the widget that initiated the delete_event"
+	if type(widget) !=gtk.ImageMenuItem:
+		if config["conf"]["tray_on_close"] in [True,"True","true"]:
+			window.hide()
+			return
 	if len(mntedlist)>0:
 		MSG=_("You still have remote shares mounted on your system. This could cause certain programs to hang if the remote server shuts down while they are still mounted. Are you sure you want to quit?")
 		info_window = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, message_format=MSG)
@@ -1243,10 +1259,6 @@ def delete_event( widget, event=None, data=None):
 		os.kill(os.getpid(),9)
 	gtk.main_quit()
 	return False
-def prt(button):
-	print "clicked"
-
-
 def load_bookmarks():
 	print "updating bookmarks"
 	global CLEARING,list_menu
@@ -1455,8 +1467,6 @@ srchbtn.connect('clicked', search,"default")
 
 bookmark_menu=gtk.MenuItem(_("Bookmarks"))
 list_menu=gtk.Menu()
-def menuitem_response(widget,buf):
-	print buf
 
 bookmark_menu.set_submenu(list_menu)
 bookmark_menu.set_tooltip_text(_("Choose a bookmarked share to mount. You can bookmark shares with the button below. You can right click on a bookmark to delete it."))
@@ -1572,6 +1582,7 @@ mnt_cmd_cifs.set_tooltip_text(_("This typically requires you to SUID the mount.c
 mnt_cmd_smb=gtk.RadioButton(mnt_cmd_cifs,"smbmount")
 mnt_cmd_smb.set_tooltip_text(_("This may not be available on all distributions of GNU/Linux"))
 mount_cmd_lbl=gtk.Label(_("Mount command"))
+to_systray=gtk.CheckButton(_("Minimize to system tray on close"))
 		####end pref-tab labels entries etc####
 	###preference tab packing####
 confvbox=gtk.VBox()
@@ -1591,6 +1602,7 @@ confvbox.pack_start(usrbox,False, True, 2)
 confvbox.pack_start(uname_entry,False, True, 2)
 confvbox.pack_start(pwlbl,False, True, 2)
 confvbox.pack_start(pw_entry,False, True, 2)
+confvbox.pack_start(to_systray,False, True, 2)
 confvbox2=gtk.VBox()
 confvbox2.pack_start(brsbox,False, True, 2)
 confvbox2.pack_start(mntlocal_entry,False, True, 2)
@@ -1750,13 +1762,53 @@ if os.access("/usr/share/pixmaps/smb-browser.png",0)==True:
 #window.show_all()
 
 
-def readconf():
+def readconf(when):
+	if when == "startup":
+		print "startup readconf"
+		global FIRST_RUN
+		if config[conf]["first_run"] in ["True",True]:
+			FIRST_RUN=True
+			print "running first run checks"
+			if MOUNT_CIFS_CMD == None and SMBMOUNT_CMD == None:
+				print "no mount commands available"
+				ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' pacakge"))
+				sys.exit()
+			print "first run = ",config[conf]["first_run"]
+			notebook.set_current_page(1)
+			config[conf]["first_run"]=False
+			config.write()
+		x=config[conf]["wgflag"]
+		print x
+		if x=="True":
+			print "true"
+			wgcheckbox.set_active(True)
+		elif x=="False":
+			print "false"
+			wgcheckbox.set_active(False)
+		y=config[conf]["flag"]
+		if y=="True":
+			print "True"
+			checkbox.set_active(True)
+		elif y=="False":
+			print "false"
+			checkbox.set_active(False)
+		z=config[conf]["clean"]
+		if z=="True":
+			print "True"
+			clncheckbox.set_active(True)
+		elif z=="False":
+			print "false"
+			clncheckbox.set_active(False)
+		if config["conf"]["tray_on_close"] in [True,"true","True"]:
+			to_systray.set_active(True)
+		else:
+			to_systray.set_active(False)
+		print "end of startup readconf"
+	print "default readconf"
 	if MOUNT_CIFS_CMD == None and SMBMOUNT_CMD == None:
 			print "no mount commands available"
 			ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' pacakge"))
 			sys.exit()
-	print "read conf "
-	print "this is activated at startup"
 	global mntlocal
 	mntlocal=config[conf]["mntlocal"]
 	print config
@@ -1793,45 +1845,7 @@ def readconf():
 		for parent in wg_entry.get_text().split(","):
 			wgtreestore.append(None, [parent])
 		scanbtn.set_sensitive(False)
-	print "end of readconf "
-def readconf1():
-	global FIRST_RUN
-	if config[conf]["first_run"] in ["True",True]:
-		FIRST_RUN=True
-		print "running first run checks"
-		if MOUNT_CIFS_CMD == None and SMBMOUNT_CMD == None:
-			print "no mount commands available"
-			ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' pacakge"))
-			sys.exit()
-		print "first run = ",config[conf]["first_run"]
-		notebook.set_current_page(1)
-		config[conf]["first_run"]=False
-		config.write()
-	print "running readconf1"
-	x=config[conf]["wgflag"]
-	print x
-	if x=="True":
-		print "true"
-		wgcheckbox.set_active(True)
-	elif x=="False":
-		print "false"
-		wgcheckbox.set_active(False)
-	y=config[conf]["flag"]
-	if y=="True":
-		print "True"
-		checkbox.set_active(True)
-	elif y=="False":
-		print "false"
-		checkbox.set_active(False)
-	z=config[conf]["clean"]
-	if z=="True":
-		print "True"
-		clncheckbox.set_active(True)
-	elif z=="False":
-		print "false"
-		clncheckbox.set_active(False)
-	print "end of readconf1"
-	return readconf()
+	print "end of default readconf"
 mnt.set_sensitive(False)
 umntbtn.set_sensitive(False)
 add_bookmark_btn.set_sensitive(False)
@@ -1879,7 +1893,7 @@ class startup_thread(threading.Thread):
 			udt=UD_thread()
 			udt.setDaemon(1)
 			udt.start()	
-		readconf1()
+		readconf("startup")
 		lsmounted()
 		load_bookmarks()
 		if config[conf]["show_start_msg"] in [True,"True","true"]:
@@ -1896,6 +1910,47 @@ class startup_thread(threading.Thread):
 				config.write()
 			start_window.destroy()
 			gtk.gdk.threads_leave()
+
+##the following is for the systray integration
+def show_window(widget):
+	global window,FRAME
+	print "show window"
+	window.show_all()
+	window.set_keep_above(True)
+	window.set_keep_above(False)
+def launch_fm(widget,path):
+	fmngr=fm_entry.get_text()
+	subprocess.Popen(fmngr+" "+path,shell=True)
+def popup(self,arg1,arg2,arg3):
+	mount_list=get_mounted()
+	for x in st_menu:
+		st_menu.remove(x)
+	for item in mount_list:
+		menuitem = gtk.MenuItem(label=item) 
+		menuitem.connect("activate",launch_fm,item)
+		st_menu.append(menuitem) 
+		
+	sep=gtk.SeparatorMenuItem()
+	st_menu.append(sep)
+	quititem = gtk.ImageMenuItem(gtk.STOCK_QUIT) 
+	quititem.connect('activate', delete_event) 
+	st_menu.append(quititem)
+	st_menu.show_all()
+	st_menu.popup(None, None, None, 3, arg2,)
+
+st=gtk.StatusIcon()
+st.set_tooltip(_("Smb-Browser"))
+#~ if os.access("/usr/share/pixmaps/smb-browser.png",0)==True:
+	#~ st.set_from_file("/usr/share/pixmaps/smb-browser.png")
+#~ else:
+st.set_from_stock("gtk-preferences")#gtk.STOCK_USERS)
+st_menu=gtk.Menu()
+quititem=gtk.ImageMenuItem(gtk.STOCK_QUIT)
+st_menu.append(quititem)
+st.connect("popup_menu", popup, st_menu) 
+st.connect("activate", show_window) 
+##end of systray integration
+
 startup=startup_thread()
 startup.setDaemon(1)
 startup.start()
@@ -1903,7 +1958,4 @@ startup.start()
 class MAIN(threading.Thread):
 	def __init__(self):
 		gtk.main()
-
-
-		
 main=MAIN()
