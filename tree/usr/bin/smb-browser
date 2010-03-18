@@ -18,7 +18,7 @@
 ##On Debian GNU/Linux system you can find a copy of this
 ##license in `/usr/share/common-licenses/GPL'.
 
-VERSION="1.06.2"
+VERSION="1.06.3"
 ###think i fixed the bug where the progress bar for searching for workgroups would fail to stop 
 ##fixed problem with reading workgroups from the configuration file due to the change to configobj.
 ##will not mount the same share twice.
@@ -29,26 +29,31 @@ VERSION="1.06.2"
 ##storing current unames and pw not working at the moment. not added when entered.-- FIXED
 ##added bookmark feature
 import pango
-import  gtk,sys,os,threading,time,gobject,configobj,gettext,subprocess,stat
+import  gtk,sys,os,threading,time,gobject,configobj,gettext,subprocess,stat,base64
 APP = 'smb-browser'
 DIR = '/usr/share/locale/'
 gettext.bindtextdomain(APP, DIR)
 gettext.textdomain(APP)
 _ = gettext.gettext
+VERBOSE=False
 if len(sys.argv)>1:
 	ARG=sys.argv[1]
-	if ARG=="-v":
-		print _("verbose mode")
-	elif ARG=="-V":
-		print _("Smb-Browser Version: "),VERSION
+	if "-V" in sys.argv:
+		print _("Smb-Browser Version: "),VERSION	
 		sys.exit()
-	else:
+	if "-a" in sys.argv:
+		print "auto mounting bookmarks"
+	if "-v" in sys.argv:
+		VERBOSE=True
+		print _("verbose mode")
+	if sys.argv[1] not in ["-a","-v","-V","-h"] or "-h" in sys.argv:
 		print "Usage:"
+		print "\t"+_("-a automatically mount all bookmarks marked 'yes' \n\t   in the .smb-browser.conf file.")
+		print "\t"+_("-h print this usage information")
 		print "\t"+_("-v verbose")
 		print "\t"+_("-V print Version")
-		print "\t"+_("-h print this usage information")
 		sys.exit()
-else:
+if VERBOSE==False:
 	sys.stdout=open("/dev/null", 'w')
 	sys.stdin=open("/dev/null", 'r')	
 gtk.gdk.threads_init()
@@ -165,7 +170,7 @@ def create_default_conf():
 	else:
 		cmd=SMBMOUNT_CMD
 	CREATING_CONF=False
-	return {'conf': {'version':VERSION, 'username': 'username', 'workgroup': tmpwgs, 'password': 'password', 'filemanager': 'thunar', 'mntlocal': HOME_PATH+"/Network", 'flag': 'True', 'wgflag': 'False', 'clean': 'False', 'first_run': 'True',"mount_command":cmd,"show_start_msg":True,"tray_on_close":True}}
+	return {'conf': {'version':VERSION, 'username': 'username', 'workgroup': tmpwgs, 'password': 'password', 'filemanager': 'thunar', 'mntlocal': HOME_PATH+"/Network", 'flag': 'True', 'wgflag': 'False', 'clean': 'False', 'first_run': 'True',"mount_command":cmd,"show_start_msg":True,"tray_on_close":True,"auto_mount_bookmarks":False}}
 class check_conf_thread(threading.Thread):
 	def run(self):
 		global config
@@ -464,6 +469,21 @@ def wg_processor(wg_name,userinfo):
 	DEPTH1=False
 	end_bar(_("Done Scanning."))
 
+def get_ip(hostname):
+	print "GET IP FOR >>"+hostname
+	nmbLcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
+	nmbfile=nmbLcmd.stdout.readlines()
+	nmbLcmd.stdout.close()
+	for line in nmbfile:
+		print line
+		if "<00>" in line:
+			ip_add=line.split()[0]
+			print "IP Address: ",line.split()[0]
+			return ip_add
+			break
+		elif "name_query failed to find name" in line:
+			ip_add=''
+	return None
 def host_processor(hostname,userinfo,iter):
 	global DEPTH2
 	get_from_user=False
@@ -491,20 +511,10 @@ def host_processor(hostname,userinfo,iter):
 		hostname1=host_ip_dict[hostname]
 		ip_add=host_ip_dict[hostname]
 	else:
-		nmbLcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
-		nmbfile=nmbLcmd.stdout.readlines()
-		nmbLcmd.stdout.close()
 		print "2"
 		if is_ip(hostname)==False:
 			print "IS A NAME"
-			for line in nmbfile:
-				print line
-				if "<00>" in line:
-					ip_add=line.split()[0]
-					print "IP Address: ",line.split()[0]
-					break
-				elif "name_query failed to find name" in line:
-					ip_add=''
+			ip_add = get_ip(hostname)
 		else:
 			print "IS AN IP"
 			ip_add=hostname
@@ -888,69 +898,87 @@ def manual_mnt(widget):
 	man_mnt_win.set_default(man_ok_btn)
 	man_mnt_win.show_all()
 	
+def is_mounted(sharemnt):
+	mntedcmd=subprocess.Popen("mount",shell=True,stdout=subprocess.PIPE)
+	mounted_volumes=mntedcmd.stdout.readlines()
+	mntedcmd.stdout.close()
+	for line in mounted_volumes:
+		if line.startswith(sharemnt.strip("'")):
+			return True
+	return False
+def get_mnt_info_btn():
+	##gets the sharemnt   mnt and ipadd variables for mounting
+	print "gets the sharemnt   mnt and ipadd variables for mounting"
+	
+	(selected_treestore, iter) = wgtreeview.get_selection().get_selected()
+	sharename =selected_treestore.get_value(iter, 0)
+	hostname=wgtreestore.get_value(selected_treestore.iter_parent(iter),0)
+	if hostname in host_ip_dict:
+		print "found in host_ip_dict"
+		sharemnt="\'//"+host_ip_dict[hostname]+"/"+sharename+"\'"
+	else:
+		print "not_found in host_ip_dict"
+		sharemnt="\'//"+hostname+"/"+sharename+"\'"
+	host=hostname+"/"
+	mnt="\'"+mntlocal+ host+sharename+"\'"
+	nmcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
+	nmbinfo=nmcmd.stdout.readlines()
+	nmcmd.stdout.close()
+	if is_ip(hostname)==False:
+		for line in nmbinfo:
+			if "<00>" in line:
+				ip_add=line.split()[0]
+	else:
+		ip_add=hostname	
+	return sharemnt,mnt,ip_add
+def get_mnt_info_bkmk():
+	print "Bookmark mounting activated"
+	print "#################"
+	hostname= SELECTED_BOOMARK.split("/")[0]
+	key=SELECTED_BOOMARK
+	print hostname
+	print "#################"
+	if is_ip(hostname)==False:
+		nmcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
+		nmbinfo=nmcmd.stdout.readlines()
+		nmcmd.stdout.close()
+		for line in nmbinfo:
+			if "<00>" in line:
+				ip_add=line.split()[0]
+	else:
+		ip_add=hostname
+	print SELECTED_BOOMARK
+	sharemnt="\'"+config["bookmarks"][key]["share_name"]+"\'"
+	mnt="\'"+config["bookmarks"][key]["mount_location"]+"\'"
+	return sharemnt,mnt,ip_add
 def mount(widget):
 	print "######### starting mount#################"
 	print type(widget)
 	global ip_add,CLEARING,SELECTED_BOOKMARK
 	MOUNT_CMD=config[conf]["mount_command"]
 	if MOUNT_CMD=="NONE":
-		ERROR( "no mount command found")
+		ERROR( "No mount command found!")
 		return
 	##########additional options###########
 	if type(widget)==gtk.Button:
-		(selected_treestore, iter) = wgtreeview.get_selection().get_selected()
-		sharename =selected_treestore.get_value(iter, 0)
-		hostname=wgtreestore.get_value(selected_treestore.iter_parent(iter),0)
-		if hostname in host_ip_dict:
-			print "found in host_ip_dict"
-			sharemnt="\'//"+host_ip_dict[hostname]+"/"+sharename+"\'"
-		else:
-			print "not_found in host_ip_dict"
-			sharemnt="\'//"+hostname+"/"+sharename+"\'"
-		host=hostname+"/"
-		mnt="\'"+mntlocal+ host+sharename+"\'"
-		nmcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
-		nmbinfo=nmcmd.stdout.readlines()
-		nmcmd.stdout.close()
-		if is_ip(hostname)==False:
-			for line in nmbinfo:
-				if "<00>" in line:
-					ip_add=line.split()[0]
-		else:
-			ip_add=hostname
+		sharemnt,mnt,ip_add=get_mnt_info_btn()
 	elif type(widget)==gtk.MenuItem:
-		print "menu activatd"
-		print "#################"
-		hostname= SELECTED_BOOMARK.split("/")[0]
-		key=SELECTED_BOOMARK
-		print hostname
-		print "#################"
-		nmcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
-		nmbinfo=nmcmd.stdout.readlines()
-		nmcmd.stdout.close()
-		if is_ip(hostname)==False:
-			for line in nmbinfo:
-				
-				if "<00>" in line:
-					ip_add=line.split()[0]
-		else:
-			ip_add=hostname
-		print SELECTED_BOOMARK
-		sharemnt="\'"+config["bookmarks"][key]["share_name"]+"\'"
-		mnt="\'"+config["bookmarks"][key]["mount_location"]+"\'"
+		sharemnt,mnt,ip_add=get_mnt_info_bkmk()
+	single_try=False
 	if type(widget)==list:
+		print "LIST MOUNT"
+		print widget
+		if widget[0] == True:
+			del widget[0]
+			single_try=True
 		print "manual mount time"
+		print widget
 		hostname=widget[0]
 		sharename=widget[1]
 		ip_add=widget[2]
 		user_options=widget[3]
 		sharemnt="\'//"+hostname+"/"+sharename+"\'"
 		mnt="\'"+mntlocal+ hostname+"/"+sharename+"\'"
-		print sharemnt
-		print mnt
-		print ip_add
-		print user_options
-#		return
 	else:
 		if checkbox.get_active() ==True:
 			user_options="sec=none,user=guest"
@@ -967,35 +995,39 @@ def mount(widget):
 	index = mnt_rwro.get_active()
 	if model[index][0].split()[0] =="ro":
 		addoptions=addoptions+",ro"
+	addoptions=(addoptions+",ip="+ip_add).strip(",")
 	print addoptions+"this is add options"
-	addoptions=addoptions+"ip="+ip_add
+	
 	#############end additional options#########
-
-	###start the mounting process
-	###first try by settings
+	##check if the share is already mounted
 	print sharemnt
-	mntedcmd=subprocess.Popen("mount",shell=True,stdout=subprocess.PIPE)
-	mounted_volumes=mntedcmd.stdout.readlines()
-	mntedcmd.stdout.close()
-	for line in mounted_volumes:
-		if line.startswith(sharemnt.strip("'")):
-			print "already mounted"
+	if is_mounted(sharemnt)==True:
+		if single_try==True:
+			print _("That share is already mounted")
+			return
+		else:
 			return ERROR(_("That share is already mounted"))
-			
+	##make the directory if it is not there.
 	if os.access(mnt,0)==False:
 		mkdircmd=subprocess.Popen("mkdir -p "+mnt,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		error=mkdircmd.stderr.readlines()
 		if mkdircmd.wait() != 0:
 			ERROR(error[0])
+	##now we have universal_mount try and mount the share
+	##this attempt is by settings
 	returncode,output,errors=universal_mount(MOUNT_CMD,"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions)
 	print returncode
 	print output
 	print errors
-	print "end for now\n\n\n\n\n\n"
+	print "end for now\n\n"
 	print MOUNT_CMD+"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions," <<<1"
 	if returncode !=0:
 		print output
 		if "denied" in output:
+			if single_try ==True:
+				print "mount denied but only trying once"
+				return lsmounted()
+			##now since it failed we check for more upto date username and pw in the running list.
 			print "lets get check our running list for info"
 			if hostname in username_pw_list.keys():
 				print "FOUND HOSTNAME"
@@ -1004,15 +1036,22 @@ def mount(widget):
 				returncode2,output2,errors2=universal_mount(MOUNT_CMD,"  "+sharemnt+" "+mnt+" -o "+user_options+","+addoptions)
 				if returncode2 !=0: 
 					if "denied" in output2:
+						##we failed again so we mount by user input
 						return mount_by_user_input(addoptions," "+_("Access Denied! Please enter your:"),sharemnt,mnt)
 						#return mount_by_user_input(addoptions," Access Denied! Please enter \n your:")
 				else:
 					progbar.set_text(_("Done mounting")+" "+sharemnt)
 					return lsmounted()
 			else:
+				##we did not find any so we mount by user input
 				return mount_by_user_input(addoptions," "+_("Access Denied! Please enter your:"),sharemnt,mnt)
 		else:
-			return ERROR(output)
+			if single_try==True:
+				print "####mount error#####"
+				print output.strip()
+				print "####mount error#####"
+			else:
+				return ERROR(output)
 	else:
 		#~ bookmarks_cmb.set_active(0)
 		progbar.set_text(_("Done mounting")+" "+sharemnt)
@@ -1170,6 +1209,7 @@ def save(savebtn):
 	x=wgcheckbox.get_active()
 	z=clncheckbox.get_active()
 	tr=to_systray.get_active()
+	am=automnt_cb.get_active()
 	conf="conf"
 	pwvar= pw_entry.get_text()
 	unamevar=uname_entry.get_text()
@@ -1200,12 +1240,13 @@ def save(savebtn):
 	config[conf]["username"]=unamevar
 	config[conf]["workgroup"]=wg_entry.get_text().upper()
 	config[conf]["filemanager"]=fmvar
-	config[conf]["password"]=pwvar
+	config[conf]["password"]=base64.b64encode(pwvar)
 	config[conf]["mntlocal"]=localvar
 	config[conf]["flag"]=y
 	config[conf]["wgflag"]=x
 	config[conf]["clean"]=z
 	config[conf]["tray_on_close"]=tr
+	config[conf]["auto_mount_bookmarks"]=am
 	config[conf]["mount_command"]=mnt_cmd
 	config.write()
 	readconf("save")
@@ -1232,7 +1273,8 @@ def delete_event( widget, event=None, data=None):
 	if type(widget) !=gtk.ImageMenuItem:
 		if config["conf"]["tray_on_close"] in [True,"True","true"]:
 			window.hide()
-			return
+			return True
+	print "this is the else"
 	if len(mntedlist)>0:
 		MSG=_("You still have remote shares mounted on your system. This could cause certain programs to hang if the remote server shuts down while they are still mounted. Are you sure you want to quit?")
 		info_window = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, message_format=MSG)
@@ -1270,14 +1312,9 @@ def load_bookmarks():
 	z=0	
 	for x in list_menu:
 		list_menu.remove(x)
-	#~ bookmark_list.clear()
 	if "bookmarks" in config.keys():
 		print "present"
 		for item in config["bookmarks"]:
-			#~ bookmark_liststore.append([item]) 
-			#~ iter = bookmark_list.append( [z,item] )
-			#~ z=z+1
-#for i in range(3):
 			buf = item
 			list_menu_items = gtk.MenuItem(buf)
 			list_menu_items.add_events(gtk.gdk.BUTTON_PRESS_MASK)
@@ -1290,6 +1327,20 @@ def load_bookmarks():
 	print "end of bookmark update"
 
 def add_bookmark(add_btn):
+	print host_ip_dict
+	print "#\n#\n#\n#\n#\n#\n"
+	uname,pw = get_uname_pw(add_btn,_("If you want to automount this share on startup, please enter the username and password used to connect with. To connect without a username or password, leave the entries blank. Thanks:"),None)
+	print uname
+	print pw
+	if uname == None and pw == None:
+		auto_mount="no"
+	else:
+		if uname.strip()=="":
+			uname="guest"
+			pw=None
+		else:
+			pw=base64.b64encode(pw.strip())
+		auto_mount="yes"
 	s = mntedtreeview.get_selection()
 	print config.keys()
 	if "bookmarks"  not in config.keys():
@@ -1304,11 +1355,35 @@ def add_bookmark(add_btn):
 		if itemclicked in line:
 			line=line.split(" on /")
 			share=line[0].lstrip("//")
+			ip_addr=''
+			print "next is hostname/share"
+			print share
+			print share.lstrip(mntlocal_entry.get_text())
+			print share.lstrip(mntlocal_entry.get_text()).split("/")[0]
+			hostname=share.lstrip(mntlocal_entry.get_text()).split("/")[0]
+			if hostname in username_pw_list.keys():
+				print "there it is"
+				print hostname
 			if share not in config["bookmarks"]:
 				#bookmark_liststore.append([share]) 
 				print "bookmarking ",itemclicked
 				config["bookmarks"][share]={}
 				config["bookmarks"][share]["share_name"]="//"+share
+				config["bookmarks"][share]["uname"]=uname
+				config["bookmarks"][share]["pw"]=pw
+				config["bookmarks"][share]["auto_mount"]=auto_mount
+				if is_ip(hostname) == True:
+					print "its a ip address>>"+hostname
+					ip_addr=hostname
+				elif hostname in host_ip_dict.keys():
+						ip_addr=host_ip_dict[hostname]
+						print ip_addr,"HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH:"
+				else:
+					print "could not find "+hostname+" in ",host_ip_dict
+					ip_addr=get_ip(hostname)
+					if ip_addr in [None,""]:
+						return ERROR(_("Could not find an IP Address for this host."))
+				config["bookmarks"][share]["ip"]=ip_addr
 				config["bookmarks"][share]["mount_location"]=itemclicked
 				config.write()
 				load_bookmarks()
@@ -1583,6 +1658,7 @@ mnt_cmd_smb=gtk.RadioButton(mnt_cmd_cifs,"smbmount")
 mnt_cmd_smb.set_tooltip_text(_("This may not be available on all distributions of GNU/Linux"))
 mount_cmd_lbl=gtk.Label(_("Mount command"))
 to_systray=gtk.CheckButton(_("Minimize to system tray on close"))
+automnt_cb=gtk.CheckButton(_("Auto mount bookmarks on start"))
 		####end pref-tab labels entries etc####
 	###preference tab packing####
 confvbox=gtk.VBox()
@@ -1603,6 +1679,7 @@ confvbox.pack_start(uname_entry,False, True, 2)
 confvbox.pack_start(pwlbl,False, True, 2)
 confvbox.pack_start(pw_entry,False, True, 2)
 confvbox.pack_start(to_systray,False, True, 2)
+confvbox.pack_start(automnt_cb,False, True, 2)
 confvbox2=gtk.VBox()
 confvbox2.pack_start(brsbox,False, True, 2)
 confvbox2.pack_start(mntlocal_entry,False, True, 2)
@@ -1803,6 +1880,10 @@ def readconf(when):
 			to_systray.set_active(True)
 		else:
 			to_systray.set_active(False)
+		if config["conf"]["auto_mount_bookmarks"] in [True,"true","True"]:
+			automnt_cb.set_active(True)
+		else:
+			automnt_cb.set_active(False)
 		print "end of startup readconf"
 	print "default readconf"
 	if MOUNT_CIFS_CMD == None and SMBMOUNT_CMD == None:
@@ -1817,7 +1898,7 @@ def readconf(when):
 		mntlocal=mntlocal+"/"
 	mntlocal_entry.set_text(mntlocal)
 	wg_entry.set_text(config[conf]["workgroup"].strip("'"))
-	pw_entry.set_text(config[conf] ["password"])
+	pw_entry.set_text(base64.b64decode(config[conf] ["password"]))
 	fm_entry.set_text(config[conf] ["filemanager"])
 	uname_entry.set_text(config[conf]["username"])
 	if "smbmount" in config[conf]["mount_command"].strip():
@@ -1846,11 +1927,32 @@ def readconf(when):
 			wgtreestore.append(None, [parent])
 		scanbtn.set_sensitive(False)
 	print "end of default readconf"
+	if automnt_cb.get_active() == True:#"-a" in sys.argv:
+		print "start the auto mount process"
+		automnt=automount_thread()
+		automnt.setDaemon(1)
+		automnt.start()
 mnt.set_sensitive(False)
 umntbtn.set_sensitive(False)
 add_bookmark_btn.set_sensitive(False)
 #~ def show_startup_msg():
-
+class automount_thread(threading.Thread):#,x,userinfo):
+	def run(self):
+		print "run funciton in automount"
+		print config
+		for bkmark in config["bookmarks"].keys():
+			if "auto_mount" in config["bookmarks"][bkmark].keys():
+				if config["bookmarks"][bkmark]["auto_mount"].strip().lower()=="yes":
+					useroptions="username="+config["bookmarks"][bkmark]["uname"]+"%"+base64.b64decode(config["bookmarks"][bkmark]["pw"])
+					info_ls=[]
+					info_ls.append(True)
+					info_ls.append(bkmark.split("/")[0].strip("/"))
+					info_ls.append(bkmark.split("/")[1].strip("/"))
+					info_ls.append(config["bookmarks"][bkmark]["ip"])
+					info_ls.append(useroptions)
+					print "we would auto mount",bkmark
+					mount(info_ls)
+		print "end of run function in automount"
 class scan_thread(threading.Thread):#,x,userinfo):
 	def run(self):
 		global userinfo
@@ -1916,6 +2018,7 @@ def show_window(widget):
 	global window,FRAME
 	print "show window"
 	window.show_all()
+	FRAME.show_all()
 	window.set_keep_above(True)
 	window.set_keep_above(False)
 def launch_fm(widget,path):
@@ -1940,10 +2043,10 @@ def popup(self,arg1,arg2,arg3):
 
 st=gtk.StatusIcon()
 st.set_tooltip(_("Smb-Browser"))
-#~ if os.access("/usr/share/pixmaps/smb-browser.png",0)==True:
-	#~ st.set_from_file("/usr/share/pixmaps/smb-browser.png")
-#~ else:
-st.set_from_stock("gtk-preferences")#gtk.STOCK_USERS)
+if os.access("/usr/share/pixmaps/smb-browser.png",0)==True:
+	st.set_from_file("/usr/share/pixmaps/smb-browser.png")
+else:
+	st.set_from_stock("gtk-preferences")#gtk.STOCK_USERS)
 st_menu=gtk.Menu()
 quititem=gtk.ImageMenuItem(gtk.STOCK_QUIT)
 st_menu.append(quititem)
