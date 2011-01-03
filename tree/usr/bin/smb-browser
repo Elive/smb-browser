@@ -1795,7 +1795,7 @@ helpbox.pack_start(clean_content,True,True,0)
 ####End Help Tab#####
 ####Mount Options Tab#####
 mntoptbox=gtk.VBox()
-mntops=gtk.Label(_("Additional mount options")+"\n"+_("see 'man smbmount' for information")+"\n"+_("(comma separated)"))
+mntops=gtk.Label(_("Additional mount options")+"\n"+_("see 'man smbmount' for details")+"\n"+_("(comma separated)"))
 mntops_entry=gtk.Entry()
 mnt_rwro= gtk.combo_box_new_text()
 mnt_rwro.append_text("rw ("+_("Read and Write"))
