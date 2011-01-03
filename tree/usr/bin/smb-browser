@@ -67,9 +67,9 @@ host_ip_dict={}
 FINDWGS=False;FIRST_RUN=False;DEPTH1=False;DEPTH2=False;DEPTH3=False;FIND=False;RUN=False;CLEARING=False;SELECTED_BOOKMARK=''
 CREATING_CONF=False
 if os.access("/etc/elive-version",os.F_OK):
-	BROWSE_VS_SHARE_MSG=_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, from thunar select a directory to share and right click to it, then select the option 'Share'. If you want to manage your Shared configurations or set advanced options run 'Samba Admin', you can find it on your menus.")
+	BROWSE_VS_SHARE_MSG=_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others from thunar, select a directory to share and right click on it, then select the option 'Share'. If you want to manage your Shared configurations or set advanced options run 'Samba Admin', you can find it on your menus.")
 else:
-	BROWSE_VS_SHARE_MSG=_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, then try running 'smb-admin' as root or 'smb-usershare' as user. This may require you to install the package 'smb-admin'.")
+	BROWSE_VS_SHARE_MSG=_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, then try running 'smb-admin' as root or 'smb-usershare' as a standard user. This may require you to install the package 'smb-admin'.")
 ###############
 def update_config():
 	print "updating configuration"
@@ -463,7 +463,7 @@ def wg_processor(wg_name,userinfo):
 #					time.sleep(2)
 	gtk.gdk.threads_enter()	
 	if wgtreestore.iter_nth_child(iter, 0) == None:
-		MSG=_("Sorry, We could not locate any hosts on")+" "+wg_name+"."
+		MSG=_("Sorry, we could not locate any hosts on")+" "+wg_name+"."
 		ERROR(MSG)
 	gtk.gdk.threads_leave()
 	DEPTH1=False
@@ -840,10 +840,10 @@ def manual_mnt(widget):
 			user_options="sec=none,user=guest"
 		else:
 			if manuname_ent.get_text().strip()=="" or pass_ent.get_text().strip()=='':
-				return ERROR(_("Please Enter a user name and password or select the guest option."))
+				return ERROR(_("Please enter a user name and password or select the guest option."))
 			user_options="username="+manuname_ent.get_text()+"%"+pass_ent.get_text()
 		if ip_add=='' and is_ip(server)==False:
-			ERROR(_("The server you entered does not appear to be an ip address and we are not able to locate an ip address for that name."))
+			ERROR(_("The server details you entered do not appear to be IP address and we are not able to locate an IP address for that name."))
 		else:
 			print server,share,ip_add,user_options
 			mount([server,share,ip_add,user_options])
@@ -1457,7 +1457,7 @@ umount_root.show()
 wgtreestore = gtk.TreeStore(str)
 wgtreeview = gtk.TreeView(wgtreestore)
 wgtvcolumn = gtk.TreeViewColumn(_("Network"))
-wgtreeview.set_tooltip_text(_("This list contains the workgroups found on your network, or specified in your preferences. Selected a workgroup to find the hosts/computers which are sharing files then select a share and click the 'Mount' button to access its files."))
+wgtreeview.set_tooltip_text(_("This list contains the workgroups found on your network, or specified in your preferences. Selecte a workgroup to find the hosts/computers which are sharing files then select a share and click the 'Mount' button to access its files."))
 wgtreeview.append_column(wgtvcolumn)
 wgtreeview.connect("cursor-changed",st_scanwgornb,"default")
 wgtreeview.connect("row-activated",auto_mount)
@@ -1491,9 +1491,9 @@ mntedscrolledwindow.add(mntedtreeview)
 
 mnt=gtk.Button(stock=gtk.STOCK_CONNECT)
 mnt.get_children()[0].get_children()[0].get_children()[1].set_label(_('Mount'))
-mnt.set_tooltip_text(_("Once you have seleceted a share, click this to mount the share on your system. Mounting the shares makes it accessible for you to view, read, and edit etc. the files."))
+mnt.set_tooltip_text(_("Once you have selected a share, click this to mount the share on your system. Mounting the shares makes it accessible for you to view, read, and edit the files."))
 add_bookmark_btn=gtk.Button(stock=gtk.STOCK_ADD)
-add_bookmark_btn.set_tooltip_text(_("Choose a share in the list of mounted shares to bookmark, click the button and it will be added to the 'Bookmarks' section above. Next time all you have to do is choose it from the list to mount it"))
+add_bookmark_btn.set_tooltip_text(_("Choose a share in the list of mounted shares to bookmark. Click the button and it will be added to the 'Bookmarks' section above. Next time all you have to do is choose it from the list to mount it"))
 add_bookmark_btn.get_children()[0].get_children()[0].get_children()[1].set_label(_("BookMark"))
 add_bookmark_btn.connect("clicked",add_bookmark)
 #mnt.connect('clicked', mount,"NONE")
@@ -1524,7 +1524,7 @@ def abtfunc(x):
 	x.connect("response", close)
 	x.set_wrap_license(True)
 	x.set_license("This program was designed to assist users in finding and mounting samba shared folders on a network while being easy yet functional Copyright (C) <2007>  <David Braker> This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA. On a Debian GNU/Linux system you can find a copy of this license in `/usr/share/common-licenses/'.")
-	x.set_comments(_("This program was designed to assist users in finding and mounting samba shared folders on a network while being easy yet functional."))
+	x.set_comments(_("This program was designed to assist users in finding and mounting Samba shared folders on a network while being easy yet functional."))
 	x.show()
 about.connect("clicked",abtfunc)
 scanbtn=gtk.Button(stock=gtk.STOCK_FIND)
@@ -1533,18 +1533,18 @@ scanbtn.set_tooltip_text(_("To enable this, check the 'Scan for other workgroups
 scanbtn.connect('clicked', st_func)
 fmbtn=gtk.Button(stock=gtk.STOCK_OPEN)
 fmbtn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Browse"))
-fmbtn.set_tooltip_text(_("Click to launch your defined filemanger and browse the mounted shares."))
+fmbtn.set_tooltip_text(_("Click to launch your defined file manager and browse the mounted shares."))
 fmbtn.connect('clicked', fm)
 srchbtn=gtk.Button(stock=gtk.STOCK_FIND)
-srchbtn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Search by Host Name or IP"))
-srchbtn.set_tooltip_text(_("Enter the name of a computer or its IP address in the box to the left, then click to try and find it on the network."))
+srchbtn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Search by Hostname or IP"))
+srchbtn.set_tooltip_text(_("Enter the hostname of a computer or its IP address in the box to the left, then click to try and find it on the network."))
 srchbtn.connect('clicked', search,"default")
 
 bookmark_menu=gtk.MenuItem(_("Bookmarks"))
 list_menu=gtk.Menu()
 
 bookmark_menu.set_submenu(list_menu)
-bookmark_menu.set_tooltip_text(_("Choose a bookmarked share to mount. You can bookmark shares with the button below. You can right click on a bookmark to delete it."))
+bookmark_menu.set_tooltip_text(_("Choose a bookmarked share to mount. You can bookmark shares with the button below. You can right-click on a bookmark to delete it."))
 
 menu_bar = gtk.MenuBar()
 menu_bar.append (bookmark_menu)
@@ -1553,7 +1553,7 @@ srch_entry=gtk.Entry()
 srch_entry.connect("activate",search,"default")
 manual_mnt_btn=gtk.Button(stock=gtk.STOCK_CONNECT)
 manual_mnt_btn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Manual Mount"))
-manual_mnt_btn.set_tooltip_text(_("Click here to manually enter the server and share that you would like to mount. This is helpful on servers that have hidden shares."))
+manual_mnt_btn.set_tooltip_text(_("Click here to manually enter the server and share names that you would like to mount. This is helpful on servers that have hidden shares."))
 manual_mnt_btn.connect("clicked",manual_mnt)
 
 statuslbl=gtk.Label()
@@ -1628,10 +1628,10 @@ pw_entry.set_invisible_char("*")
 unamelbl=gtk.Label(_("User Name"))
 uname_entry=gtk.Entry()
 
-wglbl=gtk.Label(_("Prefered Workgroups"))
+wglbl=gtk.Label(_("Preferred Workgroups"))
 wg_entry=gtk.Entry()
 wg_entry.set_tooltip_text(_("Here you can specify a list of workgroups to appear by default in the 'Main' tab for browsing. Use a comma to separate workgroups"))
-fmlbl=gtk.Label(_("Prefered File Manager"))
+fmlbl=gtk.Label(_("Preferred File Manager"))
 fm_entry=gtk.Entry()
 fm_entry.set_tooltip_text(_("Enter the command you want to execute when clicking the 'Browse' button on the 'Main' tab."))
 mntlocallbl=gtk.Label(_("Mount Location"))
@@ -1641,11 +1641,11 @@ foldbtn=gtk.Button(_("Browse"))
 foldbtn.set_tooltip_text(_("Click to select a folder"))
 foldbtn.connect('clicked', foldersel)
 wgcheckbox=gtk.CheckButton(_("Scan for other workgroups"),False)
-wgcheckbox.set_tooltip_text(_("Checking this will allow you to click the 'Scan for workgroups' button on the 'Main' tab. This will search for workgroups on the network to find onces that you did not specify in the entry above."))
+wgcheckbox.set_tooltip_text(_("Checking this will allow you to click the 'Scan for workgroups' button on the 'Main' tab. This will search for workgroups on the network to find ones that you did not specify in the entry above."))
 savebtn=gtk.Button(stock=gtk.STOCK_SAVE)
 savebtn.connect('clicked',save)
 checkbox=gtk.CheckButton(_("Guest"),False)
-checkbox.set_tooltip_text(_("Check this to identify your self as a 'guest' or as 'anonymous' when browsing the network. Some servers will require a username and password to view and or access their shares. If you uncheck this, then you must fill in a username and password."))
+checkbox.set_tooltip_text(_("Check this to identify yourself as a 'guest' or as 'anonymous' when browsing the network. Some servers will require a username and password to view and or access their shares. If you uncheck this, then you must fill in a username and password."))
 checkbox.connect('clicked', userfunc)
 clncheckbox=gtk.CheckButton(_("Clean directories"))
 clncheckbox.set_tooltip_text(_("This will remove empty directories when unmounting."))
@@ -1657,7 +1657,7 @@ mnt_cmd_cifs.set_tooltip_text(_("This typically requires you to SUID the mount.c
 mnt_cmd_smb=gtk.RadioButton(mnt_cmd_cifs,"smbmount")
 mnt_cmd_smb.set_tooltip_text(_("This may not be available on all distributions of GNU/Linux"))
 mount_cmd_lbl=gtk.Label(_("Mount command"))
-to_systray=gtk.CheckButton(_("Minimize to system tray on close"))
+to_systray=gtk.CheckButton(_("Minimize to system tray on close."))
 automnt_cb=gtk.CheckButton(_("Auto mount bookmarks on start"))
 		####end pref-tab labels entries etc####
 	###preference tab packing####
@@ -1745,8 +1745,8 @@ sharing_content_buf=sharing_content.get_buffer()
 mtlocal_content_buf=mtlocal_content.get_buffer()
 
 main_content_buffer.set_text("\t"+_("If you enable the scan function in the preferences, then Smb-browser will use nmblookup to find master browsers on the network. It will then search each master browser for a list of Workgroups. On larger networks, especially where computers  come and go a lot, this can take a long time. It is  faster to simply specify your Workgroup name in the preferences."))
-main_content_buffer2.set_text("\t"+_("This will contact a computer directly using either its name or ip address if it is on the network."))
-wg_content_buf.set_text("\t"+_("Here you should specify the Workgroup or Workgroups you prefer to search. You can specify multiple workgroups separating them with a comma."))
+main_content_buffer2.set_text("\t"+_("This will contact a computer directly using either its hostname or IP address if it is on the network."))
+wg_content_buf.set_text("\t"+_("Here you should specify the workgroup(s) you would prefer to search for. You can specify multiple workgroups separating them with a comma."))
 scan2_content_buf.set_text("\t"+_("See above."))
 mtlocal_content_buf.set_text("\t"+_("This is the location of where the Samba shares will be mounted on your computer. You must have write permissions for this directory."))
 clean_content_buf.set_text("\t"+_("If this is checked, then Smb-browser will remove the directories created when mounting shares. If it finds a file in one of the directories it will not remove it"))
@@ -1795,7 +1795,7 @@ helpbox.pack_start(clean_content,True,True,0)
 ####End Help Tab#####
 ####Mount Options Tab#####
 mntoptbox=gtk.VBox()
-mntops=gtk.Label(_("Additional mount options")+"\n"+_("see 'man smbmount' for details.")+"\n"+_("(comma separated)"))
+mntops=gtk.Label(_("Additional mount options")+"\n"+_("see 'man smbmount' for information")+"\n"+_("(comma separated)"))
 mntops_entry=gtk.Entry()
 mnt_rwro= gtk.combo_box_new_text()
 mnt_rwro.append_text("rw ("+_("Read and Write"))
@@ -1911,9 +1911,9 @@ def readconf(when):
 					print "not SUID and not root"
 					if check_for_mnt_cmd("smbmount")==True:
 						mnt_cmd_smb.set_active(True)
-						ERROR(_("It appears that you are not 'root' and that your mount.cifs command is not SUID. We found 'smbmount' and have changed your configurations to use that. To use mount.cifs, please run the following as root in a terminal: chmod u+s ")+str(MOUNT_CIFS_CMD))
+						ERROR(_("It appears that you are not 'root' and that your mount.cifs command is not SUID. We found 'smbmount' and have changed your configuration to use that. To use mount.cifs, please run the following as root in a terminal: chmod u+s ")+str(MOUNT_CIFS_CMD))
 					else:
-						ERROR(_("It appears that you are not 'root' and that your mount.cifs command is not SUID. Until this is fixed, you will not be able to mount shares as user. Please run the following as root in a terminal: chmod u+s ")+str(MOUNT_CIFS_CMD))
+						ERROR(_("It appears that you are not 'root' and that your mount.cifs command is not SUID. Until this is fixed, you will not be able to mount shares as a user. Please run the following as root in a terminal: chmod u+s ")+str(MOUNT_CIFS_CMD))
 			else:
 				print "Activateing cifs"
 				mnt_cmd_cifs.set_active(True)
@@ -1969,7 +1969,7 @@ class startup_thread(threading.Thread):
 			gtk.gdk.threads_enter()
 			killupdatewin=True
 			if CREATING_CONF==True:
-				MSG=_("Updating Smb-Browser configurations, Please wait...")
+				MSG=_("Updating Smb-Browser configurations. Please wait...")
 				update_window = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, message_format=MSG)
 				update_window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
 				update_window.set_title(_("Smb-Browser Update")+"...")
