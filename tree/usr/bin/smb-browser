@@ -1744,7 +1744,7 @@ clean_content_buf=clean_content.get_buffer()
 sharing_content_buf=sharing_content.get_buffer()
 mtlocal_content_buf=mtlocal_content.get_buffer()
 
-main_content_buffer.set_text("\t"+_("If you enable the scan function in the preferences, then Smb-browser will use nmblookup to find master browsers on the network. It will then search each master browser for a list of Workgroups. On larger networks, especially where computers  come and go a lot, this can take a long time. It is  faster to simply specify your Workgroup name in the preferences."))
+main_content_buffer.set_text("\t"+_("If you enable the scan function in the preferences, then Smb-browser will use nmblookup to find master browsers on the network. It will then search each master browser for a list of workgroups. On larger networks, especially where computers come and go a lot, this can take a long time. It is faster to simply specify your workgroup name in the preferences."))
 main_content_buffer2.set_text("\t"+_("This will contact a computer directly using either its hostname or IP address if it is on the network."))
 wg_content_buf.set_text("\t"+_("Here you should specify the workgroup(s) you would prefer to search for. You can specify multiple workgroups separating them with a comma."))
 scan2_content_buf.set_text("\t"+_("See above."))
