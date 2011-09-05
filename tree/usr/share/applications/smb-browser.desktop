@@ -69,6 +69,5 @@ Comment[ar]=متصفح من الدلائل المشتركة
 Exec=smb-browser
 Icon=emblem-people
 Terminal=false
-MultipleArgs=false
 Type=Application
 Categories=Application;Network;FileManager
