@@ -1,6 +1,0 @@
- * My GF just tried it and I noticed a few things that could be better to have in order to made it more easy:
-   * default tab (at first launch) should be the first one, so, Main
-
- * <Thanatermesis> can you add a checkbox to this message in order to "Do not show this message again" ?   normally users just click in "ok" when there's a message, without read it, so when they will really to read it, then is not there anymore lol
-
-
