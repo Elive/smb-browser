@@ -67,9 +67,9 @@ host_ip_dict={}
 FINDWGS=False;FIRST_RUN=False;DEPTH1=False;DEPTH2=False;DEPTH3=False;FIND=False;RUN=False;CLEARING=False;SELECTED_BOOKMARK=''
 CREATING_CONF=False
 if os.access("/etc/elive-version",os.F_OK):
-	BROWSE_VS_SHARE_MSG=_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others from thunar, select a directory to share and right click on it, then select the option 'Share'. If you want to manage your Shared configurations or set advanced options run 'Samba Admin', you can find it on your menus.")
+	BROWSE_VS_SHARE_MSG=_("This program is only for browsing shares on other computers. If you would like to share  files on your computer simply open Thunar, right-click on the directory you want to share and select the option 'Share'. If you want to manage your Shared configurations or set advanced options run 'Samba Admin', you can find it in your menu.")
 else:
-	BROWSE_VS_SHARE_MSG=_("This program is for browsing shares on other computers. If you would like to share some of the files on your computer with others, then try running 'smb-admin' as root or 'smb-usershare' as a standard user. This may require you to install the package 'smb-admin'.")
+	BROWSE_VS_SHARE_MSG=_("This program is only for browsing shares on other computers. If you would like to share some of the files on your computer with others, then try running 'smb-admin' as root or 'smb-usershare' as a standard user. This may require you to install the package 'smb-admin'.")
 ###############
 def update_config():
 	print "updating configuration"
@@ -309,7 +309,7 @@ def findwgs():
 		smbcmd.stderr.close()
 		for x in OUTPUT2:
 			if "LOGON_FAILURE" in x:
-				MSG=x+"\n"+_("Please check that your username and password are correct. Or check the 'guest' box in the preferences.")
+				MSG=x+"\n"+_("Please check that your Username and Password are correct or select 'Guest' in the preferences tab.")
 				ERROR(MSG)			
 		for line in OUTPUT2:
 			if "Workgroup" in line:
@@ -334,10 +334,10 @@ def findwgs():
 		if item not in WORKGROUPS:
 			piter = wgtreestore.append(None, [item])
 	if WORKGROUPS==[]:
-		MSG=_("Sorry but no workgroups were found. If you know the name of a workgroup on your network please specify it in the 'Preferences' section. You might also check you connection.")
+		MSG=_("Sorry but no workgroups were found. If you know the name of a workgroup on your network please specify it in the 'Preferences' tab. You might also check your connection.")
 		ERROR(MSG)
 	gtk.gdk.threads_leave()
-	end_bar2(_("Done searching for workgroups"))
+	end_bar2(_("Done Searching for Workgroups"))
 	RUN=False
 def start_bar(label):
 	global timer,DEPTH1,DEPTH2,DEPTH3
@@ -364,7 +364,7 @@ def end_bar(label):
 	progbar.set_text(label)
 	gobject.source_remove(timer)
 	progbar.set_fraction(0)
-	progbar.set_text(_("Finished."))
+	progbar.set_text(_("Finished Loading"))
 	bar_state=False
 	gtk.gdk.threads_leave()
 def start_bar2(label):
@@ -393,7 +393,7 @@ def end_bar2(label):
 	scan_progbar.set_text(label)
 	gobject.source_remove(timer2)
 	scan_progbar.set_fraction(0)
-	scan_progbar.set_text(_("Finished."))
+	scan_progbar.set_text(_("Finished Loading"))
 	gtk.gdk.threads_leave()
 def wg_processor(wg_name,userinfo):
 	global DEPTH1,DEPTH2,DEPTH3
@@ -467,7 +467,7 @@ def wg_processor(wg_name,userinfo):
 		ERROR(MSG)
 	gtk.gdk.threads_leave()
 	DEPTH1=False
-	end_bar(_("Done Scanning."))
+	end_bar(_("Scanning Complete."))
 
 def get_ip(hostname):
 	print "GET IP FOR >>"+hostname
@@ -604,18 +604,18 @@ def host_processor(hostname,userinfo,iter):
 		else:
 			if endit==True:
 				DEPTH2=False
-				end_bar(_("Done Scanning."))
+				end_bar(_("Scanning Complete."))
 			return
 		print hostname,userinfo,iter
 		if endit==True:
 			DEPTH2=False
-			end_bar(_("Done Scanning."))
+			end_bar(_("Scanning Complete."))
 		#DEPTH2=False
 		return host_processor(hostname,userinfo,iter)
 	#DEPTH2=False
 	if endit==True:
 		DEPTH2=False
-		end_bar(_("Done Scanning."))
+		end_bar(_("Scanning Complete."))
 	
 	
 def scanwgornb(wgtreeviewx,userinfo):
@@ -663,7 +663,7 @@ def set_pc_info(hostname):
 		print "depth did not = 1 and thus we are populating the host information"
 		print hostname
 		ip_add=host_ip_dict[hostname]
-		info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host name: ")+hostname+"\n"+_("IP Address: ")+ip_add)
+		info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host Name: ")+hostname+"\n"+_("IP Address: ")+ip_add)
 	else:
 		print "else statement in set_pc_info()"
 		nmbcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
@@ -676,9 +676,9 @@ def set_pc_info(hostname):
 				if "<00>" in line:
 					ip_add=line.split()[0]
 					print "IP Address: ",line.split()[0]
-					info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host name: ")+hostname+"\n"+_("IP Address: ")+ip_add)
+					info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host Name: ")+hostname+"\n"+_("IP Address: ")+ip_add)
 		else:
-			info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host name: ")+"Unknown"+"\n"+_("IP Address: ")+hostname)
+			info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host Name: ")+"Unknown"+"\n"+_("IP Address: ")+hostname)
 def st_func(button):
 #	print button.get_label()
 #	print "starting"
@@ -793,7 +793,7 @@ def mount_by_user_input(addoptions,MSG,sharemnt,mnt):
 		print output
 		return mount_by_user_input(addoptions," "+output+"\n"+_("Access Denied! Please enter your:"),sharemnt,mnt)
 	else:
-		progbar.set_text(_("Done mounting")+" "+sharemnt)
+		progbar.set_text(_("Done Mounting")+" "+sharemnt)
 		return lsmounted()
 def universal_mount(mntcmd,options):
 	mntshare=subprocess.Popen(mntcmd+"  "+options,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
@@ -840,10 +840,10 @@ def manual_mnt(widget):
 			user_options="sec=none,user=guest"
 		else:
 			if manuname_ent.get_text().strip()=="" or pass_ent.get_text().strip()=='':
-				return ERROR(_("Please enter a user name and password or select the guest option."))
+				return ERROR(_("Please enter a Username and Password or select 'Guest' in the preferences tab."))
 			user_options="username="+manuname_ent.get_text()+"%"+pass_ent.get_text()
 		if ip_add=='' and is_ip(server)==False:
-			ERROR(_("The server details you entered do not appear to be IP address and we are not able to locate an IP address for that name."))
+			ERROR(_("The server details you entered do not appear to be an IP address and we are not able to locate an IP address for that name."))
 		else:
 			print server,share,ip_add,user_options
 			mount([server,share,ip_add,user_options])
@@ -1040,7 +1040,7 @@ def mount(widget):
 						return mount_by_user_input(addoptions," "+_("Access Denied! Please enter your:"),sharemnt,mnt)
 						#return mount_by_user_input(addoptions," Access Denied! Please enter \n your:")
 				else:
-					progbar.set_text(_("Done mounting")+" "+sharemnt)
+					progbar.set_text(_("Done Mounting")+" "+sharemnt)
 					return lsmounted()
 			else:
 				##we did not find any so we mount by user input
@@ -1054,7 +1054,7 @@ def mount(widget):
 				return ERROR(output)
 	else:
 		#~ bookmarks_cmb.set_active(0)
-		progbar.set_text(_("Done mounting")+" "+sharemnt)
+		progbar.set_text(_("Done Mounting")+" "+sharemnt)
 		return lsmounted()
 
 
@@ -1215,7 +1215,7 @@ def save(savebtn):
 	unamevar=uname_entry.get_text()
 	if checkbox.get_active()==False:
 		if pwvar=="" or unamevar=="":
-			ERROR(_("Enter a username and password or check the 'Guest' option. Settings will not be saved."))
+			ERROR(_("Enter a Username and Password or check the 'Guest' option. Settings will not be saved."))
 			return
 	fmvar=fm_entry.get_text()
 	localvar=mntlocal_entry.get_text()
@@ -1329,7 +1329,7 @@ def load_bookmarks():
 def add_bookmark(add_btn):
 	print host_ip_dict
 	print "#\n#\n#\n#\n#\n#\n"
-	uname,pw = get_uname_pw(add_btn,_("If you want to automount this share on startup, please enter the username and password used to connect with. To connect without a username or password, leave the entries blank. Thanks:"),None)
+	uname,pw = get_uname_pw(add_btn,_("If you want to automount this share on startup, please enter the Username and Password. To connect without a Username or Password, leave the entries blank. Thanks:"),None)
 	print uname
 	print pw
 	if uname == None and pw == None:
@@ -1474,7 +1474,7 @@ wgscrolledwindow.add(wgtreeview)
 mntedcelR = gtk.CellRendererText()
 mntedlist = gtk.ListStore(int,str)
 mntedtreeview = gtk.TreeView(mntedlist)
-mntedtreeview.insert_column_with_attributes(0, _("Mounted Shares (To view the files, click 'Browse')"), mntedcelR, text=1)
+mntedtreeview.insert_column_with_attributes(0, _("Mounted Shares (Click 'Browse' to view)"), mntedcelR, text=1)
 mntedmodel = mntedtreeview.get_selection()
 mntedmodel.set_mode(gtk.SELECTION_SINGLE)
 mntedtreeview.set_model(mntedlist)
@@ -1493,8 +1493,8 @@ mnt=gtk.Button(stock=gtk.STOCK_CONNECT)
 mnt.get_children()[0].get_children()[0].get_children()[1].set_label(_('Mount'))
 mnt.set_tooltip_text(_("Once you have selected a share, click this to mount the share on your system. Mounting the shares makes it accessible for you to view, read, and edit the files."))
 add_bookmark_btn=gtk.Button(stock=gtk.STOCK_ADD)
-add_bookmark_btn.set_tooltip_text(_("Choose a share in the list of mounted shares to bookmark. Click the button and it will be added to the 'Bookmarks' section above. Next time all you have to do is choose it from the list to mount it"))
-add_bookmark_btn.get_children()[0].get_children()[0].get_children()[1].set_label(_("BookMark"))
+add_bookmark_btn.set_tooltip_text(_("Add 'Mounted Shares' to Bookmarks."))
+add_bookmark_btn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Bookmark"))
 add_bookmark_btn.connect("clicked",add_bookmark)
 #mnt.connect('clicked', mount,"NONE")
 mnt.connect('clicked', mount)
@@ -1524,7 +1524,7 @@ def abtfunc(x):
 	x.connect("response", close)
 	x.set_wrap_license(True)
 	x.set_license("This program was designed to assist users in finding and mounting samba shared folders on a network while being easy yet functional Copyright (C) <2007>  <David Braker> This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA. On a Debian GNU/Linux system you can find a copy of this license in `/usr/share/common-licenses/'.")
-	x.set_comments(_("This program was designed to assist users in finding and mounting Samba shared folders on a network while being easy yet functional."))
+	x.set_comments(_("This program was designed to assist users in finding and mounting Samba shared devices/directories on a network while being easy yet functional."))
 	x.show()
 about.connect("clicked",abtfunc)
 scanbtn=gtk.Button(stock=gtk.STOCK_FIND)
@@ -1533,18 +1533,18 @@ scanbtn.set_tooltip_text(_("To enable this, check the 'Scan for other workgroups
 scanbtn.connect('clicked', st_func)
 fmbtn=gtk.Button(stock=gtk.STOCK_OPEN)
 fmbtn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Browse"))
-fmbtn.set_tooltip_text(_("Click to launch your defined file manager and browse the mounted shares."))
+fmbtn.set_tooltip_text(_("Click to launch your defined file manager to browse the mounted shares."))
 fmbtn.connect('clicked', fm)
 srchbtn=gtk.Button(stock=gtk.STOCK_FIND)
 srchbtn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Search by Hostname or IP"))
-srchbtn.set_tooltip_text(_("Enter the hostname of a computer or its IP address in the box to the left, then click to try and find it on the network."))
+srchbtn.set_tooltip_text(_("Enter the hostname of a computer or its IP Address in the box to the left, then click to try and find it on the network."))
 srchbtn.connect('clicked', search,"default")
 
 bookmark_menu=gtk.MenuItem(_("Bookmarks"))
 list_menu=gtk.Menu()
 
 bookmark_menu.set_submenu(list_menu)
-bookmark_menu.set_tooltip_text(_("Choose a bookmarked share to mount. You can bookmark shares with the button below. You can right-click on a bookmark to delete it."))
+bookmark_menu.set_tooltip_text(_("Choose a bookmarked share to mount. You can add shares to your bookmarks with the button below. You can right-click to remove them."))
 
 menu_bar = gtk.MenuBar()
 menu_bar.append (bookmark_menu)
@@ -1553,7 +1553,7 @@ srch_entry=gtk.Entry()
 srch_entry.connect("activate",search,"default")
 manual_mnt_btn=gtk.Button(stock=gtk.STOCK_CONNECT)
 manual_mnt_btn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Manual Mount"))
-manual_mnt_btn.set_tooltip_text(_("Click here to manually enter the server and share names that you would like to mount. This is helpful on servers that have hidden shares."))
+manual_mnt_btn.set_tooltip_text(_("Click here to manually enter the Server and Share Names to mount. This is helpful on servers that have known hidden shares."))
 manual_mnt_btn.connect("clicked",manual_mnt)
 
 statuslbl=gtk.Label()
@@ -1630,7 +1630,7 @@ uname_entry=gtk.Entry()
 
 wglbl=gtk.Label(_("Preferred Workgroups"))
 wg_entry=gtk.Entry()
-wg_entry.set_tooltip_text(_("Here you can specify a list of workgroups to appear by default in the 'Main' tab for browsing. Use a comma to separate workgroups"))
+wg_entry.set_tooltip_text(_("Here you can specify a list of Workgroups to appear by default in the 'Main' tab for browsing. Use a comma to separate multiple Workgroups"))
 fmlbl=gtk.Label(_("Preferred File Manager"))
 fm_entry=gtk.Entry()
 fm_entry.set_tooltip_text(_("Enter the command you want to execute when clicking the 'Browse' button on the 'Main' tab."))
@@ -1640,12 +1640,12 @@ mntlocal_entry.set_tooltip_text(_("This sets the location where remote shares ar
 foldbtn=gtk.Button(_("Browse"))
 foldbtn.set_tooltip_text(_("Click to select a folder"))
 foldbtn.connect('clicked', foldersel)
-wgcheckbox=gtk.CheckButton(_("Scan for other workgroups"),False)
-wgcheckbox.set_tooltip_text(_("Checking this will allow you to click the 'Scan for workgroups' button on the 'Main' tab. This will search for workgroups on the network to find ones that you did not specify in the entry above."))
+wgcheckbox=gtk.CheckButton(_("Scan for other Workgroups"),False)
+wgcheckbox.set_tooltip_text(_("Check this for access to the 'Scan for Workgroups' button on the 'Main' tab. You can search for visible workgroups on the network."))
 savebtn=gtk.Button(stock=gtk.STOCK_SAVE)
 savebtn.connect('clicked',save)
 checkbox=gtk.CheckButton(_("Guest"),False)
-checkbox.set_tooltip_text(_("Check this to identify yourself as a 'guest' or as 'anonymous' when browsing the network. Some servers will require a username and password to view and or access their shares. If you uncheck this, then you must fill in a username and password."))
+checkbox.set_tooltip_text(_("Check this to identify yourself as a 'guest' or as 'anonymous' when browsing the network. Some servers will require a username and password to view and/or access their shares. If you uncheck this, then you must fill in a username and password."))
 checkbox.connect('clicked', userfunc)
 clncheckbox=gtk.CheckButton(_("Clean directories"))
 clncheckbox.set_tooltip_text(_("This will remove empty directories when unmounting."))
@@ -1744,12 +1744,12 @@ clean_content_buf=clean_content.get_buffer()
 sharing_content_buf=sharing_content.get_buffer()
 mtlocal_content_buf=mtlocal_content.get_buffer()
 
-main_content_buffer.set_text("\t"+_("If you enable the scan function in the preferences, then Smb-browser will use nmblookup to find master browsers on the network. It will then search each master browser for a list of workgroups. On larger networks, especially where computers come and go a lot, this can take a long time. It is faster to simply specify your workgroup name in the preferences."))
+main_content_buffer.set_text("\t"+_("If you enable the scan function in the preferences then Smb-Browser will use nmblookup to find master browsers on the network. It will then search each master browser for a list of workgroups. On larger networks, especially where computers come and go a lot, this can take a long time. It is faster to simply specify your workgroup name in the preferences."))
 main_content_buffer2.set_text("\t"+_("This will contact a computer directly using either its hostname or IP address if it is on the network."))
-wg_content_buf.set_text("\t"+_("Here you should specify the workgroup(s) you would prefer to search for. You can specify multiple workgroups separating them with a comma."))
+wg_content_buf.set_text("\t"+_("Here you should specify the Workgroup(s) you would prefer to search for. Use a comma to separate multiple Workgroups"))
 scan2_content_buf.set_text("\t"+_("See above."))
 mtlocal_content_buf.set_text("\t"+_("This is the location of where the Samba shares will be mounted on your computer. You must have write permissions for this directory."))
-clean_content_buf.set_text("\t"+_("If this is checked, then Smb-browser will remove the directories created when mounting shares. If it finds a file in one of the directories it will not remove it"))
+clean_content_buf.set_text("\t"+_("If this is checked then Smb-Browser will remove all empty directories created on the local computer when shares were mounted."))
 sharing_content_buf.set_text("\t"+BROWSE_VS_SHARE_MSG)
 
 for x in [maincontent,maincontent2,prefcontent,maintext,preftext,scantext,searchtext,wgtext,sharingtext,sharing_content,scantext2, mtlocaltext, cleantext,scan2_content,wg_content,mtlocal_content,clean_content]:
@@ -1848,7 +1848,7 @@ def readconf(when):
 			print "running first run checks"
 			if MOUNT_CIFS_CMD == None and SMBMOUNT_CMD == None:
 				print "no mount commands available"
-				ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' pacakge"))
+				ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' package"))
 				sys.exit()
 			print "first run = ",config[conf]["first_run"]
 			notebook.set_current_page(1)
@@ -1888,7 +1888,7 @@ def readconf(when):
 	print "default readconf"
 	if MOUNT_CIFS_CMD == None and SMBMOUNT_CMD == None:
 			print "no mount commands available"
-			ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' pacakge"))
+			ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' package"))
 			sys.exit()
 	global mntlocal
 	mntlocal=config[conf]["mntlocal"]
