@@ -591,7 +591,7 @@ def host_processor(hostname,userinfo,iter):
 		gtk.gdk.threads_leave()
 #		time.sleep(2)
 	if shares==[]:
-		MSG=_("No shares were found. Please check that")+" "+hostname+" "+_("is sharing files. You may need to supply a username and password to find the shares. You can also try manually entering the information. To do so, click the 'Manual mount' button in the top right section of the 'Main' tab.")
+		MSG=_("No shares were found. Please check that")+" "+hostname+" "+_("is sharing files. You may need to supply a Username and Password to find the shares. You can also try manually entering the information. To do so, click the 'Manual Mount' button in the top right section of the 'Main' tab.")
 		get_from_user=True
 #	fh2.close()
 	if get_from_user==True:
@@ -1457,7 +1457,7 @@ umount_root.show()
 wgtreestore = gtk.TreeStore(str)
 wgtreeview = gtk.TreeView(wgtreestore)
 wgtvcolumn = gtk.TreeViewColumn(_("Network"))
-wgtreeview.set_tooltip_text(_("This list contains the workgroups found on your network, or specified in your preferences. Selecte a workgroup to find the hosts/computers which are sharing files then select a share and click the 'Mount' button to access its files."))
+wgtreeview.set_tooltip_text(_("This list contains the workgroups found on your network, or specified in your preferences. Select a workgroup to find the hosts/computers which are sharing then select a share and click the 'Mount' button to access its files."))
 wgtreeview.append_column(wgtvcolumn)
 wgtreeview.connect("cursor-changed",st_scanwgornb,"default")
 wgtreeview.connect("row-activated",auto_mount)
