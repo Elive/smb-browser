@@ -39,7 +39,7 @@ VERBOSE=False
 if len(sys.argv)>1:
 	ARG=sys.argv[1]
 	if "-V" in sys.argv:
-		print _("Smb-Browser Version: "),VERSION	
+		print _("Smb-Browser Version:"),VERSION	
 		sys.exit()
 	if "-a" in sys.argv:
 		print "auto mounting bookmarks"
@@ -48,7 +48,7 @@ if len(sys.argv)>1:
 		print _("verbose mode")
 	if sys.argv[1] not in ["-a","-v","-V","-h"] or "-h" in sys.argv:
 		print "Usage:"
-		print "\t"+_("-a automatically mount all bookmarks marked 'yes' \n\t   in the .smb-browser.conf file.")
+		print "\t"+_("-a automatically mount all bookmarks marked 'yes' \n\t in the .smb-browser.conf file.")
 		print "\t"+_("-h print this usage information")
 		print "\t"+_("-v verbose")
 		print "\t"+_("-V print Version")
@@ -478,7 +478,7 @@ def get_ip(hostname):
 		print line
 		if "<00>" in line:
 			ip_add=line.split()[0]
-			print "IP Address: ",line.split()[0]
+			print "IP Address:",line.split()[0]
 			return ip_add
 			break
 		elif "name_query failed to find name" in line:
@@ -663,7 +663,7 @@ def set_pc_info(hostname):
 		print "depth did not = 1 and thus we are populating the host information"
 		print hostname
 		ip_add=host_ip_dict[hostname]
-		info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host Name: ")+hostname+"\n"+_("IP Address: ")+ip_add)
+		info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host Name: ")+hostname+"\n"+_("IP Address:")+ip_add)
 	else:
 		print "else statement in set_pc_info()"
 		nmbcmd=subprocess.Popen("nmblookup "+hostname,shell=True,stdout=subprocess.PIPE)
@@ -675,10 +675,10 @@ def set_pc_info(hostname):
 				print line
 				if "<00>" in line:
 					ip_add=line.split()[0]
-					print "IP Address: ",line.split()[0]
-					info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host Name: ")+hostname+"\n"+_("IP Address: ")+ip_add)
+					print "IP Address:",line.split()[0]
+					info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host Name: ")+hostname+"\n"+_("IP Address:")+ip_add)
 		else:
-			info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host Name: ")+"Unknown"+"\n"+_("IP Address: ")+hostname)
+			info_lbl.set_text("\t"+_("Computer Information")+"\n"+_("Host Name: ")+"Unknown"+"\n"+_("IP Address:")+hostname)
 def st_func(button):
 #	print button.get_label()
 #	print "starting"
@@ -829,7 +829,7 @@ def manual_mnt(widget):
 				print line
 				if "<00>" in line:
 					ip_add=line.split()[0]
-					print "IP Address: ",line.split()[0]
+					print "IP Address:",line.split()[0]
 					break
 				elif "name_query failed to find name" in line:
 					ip_add=''
@@ -1536,7 +1536,7 @@ fmbtn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Browse"
 fmbtn.set_tooltip_text(_("Click to launch your defined file manager to browse the mounted shares."))
 fmbtn.connect('clicked', fm)
 srchbtn=gtk.Button(stock=gtk.STOCK_FIND)
-srchbtn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Search by Hostname or IP"))
+srchbtn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Seach by Hostname or IP"))
 srchbtn.set_tooltip_text(_("Enter the hostname of a computer or its IP Address in the box to the left, then click to try and find it on the network."))
 srchbtn.connect('clicked', search,"default")
 
@@ -1969,7 +1969,7 @@ class startup_thread(threading.Thread):
 			gtk.gdk.threads_enter()
 			killupdatewin=True
 			if CREATING_CONF==True:
-				MSG=_("Updating Smb-Browser configurations. Please wait...")
+				MSG=_("Updating Smb-Brower configurations. Please wait...")
 				update_window = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, message_format=MSG)
 				update_window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
 				update_window.set_title(_("Smb-Browser Update")+"...")
