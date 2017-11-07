@@ -71,3 +71,4 @@ Icon=emblem-people
 Terminal=false
 Type=Application
 Categories=Application;Network;FileManager
+NoDisplay=true
