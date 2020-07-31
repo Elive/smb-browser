@@ -791,7 +791,7 @@ def mount_by_user_input(addoptions,MSG,sharemnt,mnt):
 	if mntproc.wait() !=0:
 		print "####################\n################"
 		print output
-		return mount_by_user_input(addoptions," "+output+"\n"+_("Access Denied! Please enter your:"),sharemnt,mnt)
+		return mount_by_user_input(addoptions," "+output+"\n"+_("Access Denied. Please enter your:"),sharemnt,mnt)
 	else:
 		progbar.set_text(_("Done Mounting")+" "+sharemnt)
 		return lsmounted()
@@ -1037,14 +1037,14 @@ def mount(widget):
 				if returncode2 !=0: 
 					if "denied" in output2:
 						##we failed again so we mount by user input
-						return mount_by_user_input(addoptions," "+_("Access Denied! Please enter your:"),sharemnt,mnt)
+						return mount_by_user_input(addoptions," "+_("Access Denied. Please enter your:"),sharemnt,mnt)
 						#return mount_by_user_input(addoptions," Access Denied! Please enter \n your:")
 				else:
 					progbar.set_text(_("Done Mounting")+" "+sharemnt)
 					return lsmounted()
 			else:
 				##we did not find any so we mount by user input
-				return mount_by_user_input(addoptions," "+_("Access Denied! Please enter your:"),sharemnt,mnt)
+				return mount_by_user_input(addoptions," "+_("Access Denied. Please enter your:"),sharemnt,mnt)
 		else:
 			if single_try==True:
 				print "####mount error#####"
