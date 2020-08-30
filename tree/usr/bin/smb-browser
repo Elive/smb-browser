@@ -49,9 +49,9 @@ if len(sys.argv)>1:
 	if sys.argv[1] not in ["-a","-v","-V","-h"] or "-h" in sys.argv:
 		print "Usage:"
 		print "\t"+_("-a automatically mount all bookmarks marked 'yes' \n\t in the .smb-browser.conf file.")
-		print "\t"+_("-h print this usage information")
+		print "\t"+_("-h output this usage information")
 		print "\t"+_("-v verbose")
-		print "\t"+_("-V print Version")
+		print "\t"+_("-V output version")
 		sys.exit()
 if VERBOSE==False:
 	sys.stdout=open("/dev/null", 'w')
@@ -337,7 +337,7 @@ def findwgs():
 		MSG=_("Sorry but no workgroups were found. If you know the name of a workgroup on your network please specify it in the 'Preferences' tab. You might also check your connection.")
 		ERROR(MSG)
 	gtk.gdk.threads_leave()
-	end_bar2(_("Done Searching for Workgroups"))
+	end_bar2(_("Done searching for workgroups"))
 	RUN=False
 def start_bar(label):
 	global timer,DEPTH1,DEPTH2,DEPTH3
@@ -791,7 +791,7 @@ def mount_by_user_input(addoptions,MSG,sharemnt,mnt):
 	if mntproc.wait() !=0:
 		print "####################\n################"
 		print output
-		return mount_by_user_input(addoptions," "+output+"\n"+_("Access Denied. Please enter your:"),sharemnt,mnt)
+		return mount_by_user_input(addoptions," "+output+"\n"+_("Access denied. Please enter your:"),sharemnt,mnt)
 	else:
 		progbar.set_text(_("Done Mounting")+" "+sharemnt)
 		return lsmounted()
@@ -1037,14 +1037,14 @@ def mount(widget):
 				if returncode2 !=0: 
 					if "denied" in output2:
 						##we failed again so we mount by user input
-						return mount_by_user_input(addoptions," "+_("Access Denied. Please enter your:"),sharemnt,mnt)
+						return mount_by_user_input(addoptions," "+_("Access denied. Please enter your:"),sharemnt,mnt)
 						#return mount_by_user_input(addoptions," Access Denied! Please enter \n your:")
 				else:
 					progbar.set_text(_("Done Mounting")+" "+sharemnt)
 					return lsmounted()
 			else:
 				##we did not find any so we mount by user input
-				return mount_by_user_input(addoptions," "+_("Access Denied. Please enter your:"),sharemnt,mnt)
+				return mount_by_user_input(addoptions," "+_("Access denied. Please enter your:"),sharemnt,mnt)
 		else:
 			if single_try==True:
 				print "####mount error#####"
@@ -1215,7 +1215,7 @@ def save(savebtn):
 	unamevar=uname_entry.get_text()
 	if checkbox.get_active()==False:
 		if pwvar=="" or unamevar=="":
-			ERROR(_("Enter a Username and Password or check the 'Guest' option. Settings will not be saved."))
+			ERROR(_("Enter a username and password or check the 'Guest' option. Settings will not be saved."))
 			return
 	fmvar=fm_entry.get_text()
 	localvar=mntlocal_entry.get_text()
@@ -1382,7 +1382,7 @@ def add_bookmark(add_btn):
 					print "could not find "+hostname+" in ",host_ip_dict
 					ip_addr=get_ip(hostname)
 					if ip_addr in [None,""]:
-						return ERROR(_("Could not find an IP Address for this host."))
+						return ERROR(_("Could not find an IP address for this host."))
 				config["bookmarks"][share]["ip"]=ip_addr
 				config["bookmarks"][share]["mount_location"]=itemclicked
 				config.write()
@@ -1553,7 +1553,7 @@ srch_entry=gtk.Entry()
 srch_entry.connect("activate",search,"default")
 manual_mnt_btn=gtk.Button(stock=gtk.STOCK_CONNECT)
 manual_mnt_btn.get_children()[0].get_children()[0].get_children()[1].set_label(_("Manual Mount"))
-manual_mnt_btn.set_tooltip_text(_("Click here to manually enter the Server and Share Names to mount. This is helpful on servers that have known hidden shares."))
+manual_mnt_btn.set_tooltip_text(_("Click here to manually enter the server and share name(s) to mount. This is helpful on servers that have known hidden shares."))
 manual_mnt_btn.connect("clicked",manual_mnt)
 
 statuslbl=gtk.Label()
@@ -1848,7 +1848,7 @@ def readconf(when):
 			print "running first run checks"
 			if MOUNT_CIFS_CMD == None and SMBMOUNT_CMD == None:
 				print "no mount commands available"
-				ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' package"))
+				ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' package, so try installing that."))
 				sys.exit()
 			print "first run = ",config[conf]["first_run"]
 			notebook.set_current_page(1)
@@ -1888,7 +1888,7 @@ def readconf(when):
 	print "default readconf"
 	if MOUNT_CIFS_CMD == None and SMBMOUNT_CMD == None:
 			print "no mount commands available"
-			ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' package"))
+			ERROR(_("Could not find 'mount.cifs' or 'smbmount' commands. On Debian, these are in the 'smbfs' package, so try installing that."))
 			sys.exit()
 	global mntlocal
 	mntlocal=config[conf]["mntlocal"]
