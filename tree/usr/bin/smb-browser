@@ -67,7 +67,7 @@ host_ip_dict={}
 FINDWGS=False;FIRST_RUN=False;DEPTH1=False;DEPTH2=False;DEPTH3=False;FIND=False;RUN=False;CLEARING=False;SELECTED_BOOKMARK=''
 CREATING_CONF=False
 if os.access("/etc/elive-version",os.F_OK):
-	BROWSE_VS_SHARE_MSG=_("This program is only for browsing shares on other computers. If you would like to share  files on your computer simply open Thunar, right-click on the directory you want to share and select the option 'Share'. If you want to manage your Shared configurations or set advanced options run 'Samba Admin', you can find it in your menu.")
+	BROWSE_VS_SHARE_MSG=_("This program is only for browsing shares on other computers. If you would like to share files on your computer simply open Thunar, right-click on the directory you want to share and select the option 'Share'. If you want to manage your Shared configurations or set advanced options run 'Samba Admin', you can find it in your menu.")
 else:
 	BROWSE_VS_SHARE_MSG=_("This program is only for browsing shares on other computers. If you would like to share some of the files on your computer with others, then try running 'smb-admin' as root or 'smb-usershare' as a standard user. This may require you to install the package 'smb-admin'.")
 ###############
@@ -1412,7 +1412,7 @@ def del_bookmark(widget):
 def umount_as_root(widget):
 	print "success"
 	print unmnt
-	gksucmd=subprocess.Popen("gksu -m \""+_("You have requested to unmount the share with root permissions. Please enter the root password.")+"\" -u root umount "+"\'"+unmnt+"\'",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	gksucmd=subprocess.Popen("gksu -m \""+_("You have requested to unmount a share mounted by root. Please enter the root password.")+"\" -u root umount "+"\'"+unmnt+"\'",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	returncode=gksucmd.wait()
 	output=''.join(gksucmd.stdout.readlines())
 	errors=''.join(gksucmd.stderr.readlines())
@@ -1969,7 +1969,7 @@ class startup_thread(threading.Thread):
 			gtk.gdk.threads_enter()
 			killupdatewin=True
 			if CREATING_CONF==True:
-				MSG=_("Updating Smb-Brower configurations. Please wait...")
+				MSG=_("Updating Smb-Brower configuration. Please wait...")
 				update_window = gtk.MessageDialog(parent=None, flags=gtk.MESSAGE_WARNING, message_format=MSG)
 				update_window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
 				update_window.set_title(_("Smb-Browser Update")+"...")
